@@ -117,7 +117,7 @@ class GateHookTest(unittest.TestCase):
                 self.assertBlocked(self.shell(command), "discovery gate")
 
     def test_shell_writes_allowed_once_the_gates_are_approved(self):
-        self.approve("discovery", "planning")
+        self.approve("discovery", "stack", "planning")
         self.assertAllowed(self.shell("cat > src/app.py <<'EOF'\nprint('ok')\nEOF"))
         self.assertAllowed(self.shell("cd src && touch app.py"))
 
