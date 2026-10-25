@@ -4,7 +4,9 @@ A Claude Code plugin for replacing a legacy system slice with a new one. You bui
 
 **Status: work in progress (version 0.1).** The gate hook and the Discovery phase work. The later phases are on the roadmap below.
 
-It packages [the method](method.md) used in [daytrader-to-python](https://github.com/lukeberrycode/daytrader-to-python), a migration of DayTrader 8 (Java EE) to Python. There, Discovery was estimated at 119.3 hours without AI and took 1.26 hours of a person's time and 1.03 hours of agent time (see its `docs/timings.md`).
+The method is my own idea (Luke Berry). It's based on my professional experience of project planning and setting quality gates in the era before AI, and on real AI-assisted migrations I have run since then. I developed it with Claude, and turned it into this plugin with Claude Code's help.
+
+[The method](method.md) is an early draft of the process, in plain text. It guided Claude through the Discovery phase of [daytrader-to-python](https://github.com/lukeberrycode/daytrader-to-python), a migration of DayTrader 8 (Java EE) to Python. That phase was estimated at 119.3 hours without AI. With AI following the method, it took 1.26 hours of my time and 1.03 hours of agent time (see its `docs/timings.md`).
 
 ## The idea
 
