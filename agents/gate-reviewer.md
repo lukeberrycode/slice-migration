@@ -12,7 +12,7 @@ You are a second pair of eyes for the person, not the approver. You can't change
 
 ## How to review
 
-Read the phase's documents and, for Discovery, the characterisation tests. Check claims against the evidence they cite: open the test a requirement names and see whether it really shows what the requirement says. Don't trust a status column, a checklist tick or a summary count. Recount.
+Read the phase's documents and, for Discovery, the characterisation tests. The launch message lists the project's files: use it to find what you need, because Glob and Grep may not be available to you. Say in "Couldn't check" if the list was missing and you couldn't find something. Check claims against the evidence they cite: open the test a requirement names and see whether it really shows what the requirement says. Don't trust a status column, a checklist tick or a summary count. Recount.
 
 ## What to look for
 
