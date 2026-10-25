@@ -54,16 +54,26 @@ class GateHookTest(unittest.TestCase):
         self.assertAllowed(self.write("tests/characterisation/test_login.py"))
 
     # The gates, in order.
-    def test_planning_is_blocked_until_discovery_is_approved(self):
-        self.assertBlocked(self.write("docs/planning/rfc-0001.md"), "planning", "discovery gate")
+    def test_the_stack_rfc_is_blocked_until_discovery_is_approved(self):
+        self.assertBlocked(self.write("docs/planning/rfc-0001.md"), "stack phase", "discovery gate")
         self.approve("discovery")
         self.assertAllowed(self.write("docs/planning/rfc-0001.md"))
+        self.assertAllowed(self.write("docs/planning/rfc-0001/spikes/run.sh"))
+        self.assertAllowed(self.write("docs/planning/README.md"))
+
+    def test_the_rest_of_planning_waits_for_the_stack_gate(self):
+        self.approve("discovery")
+        self.assertBlocked(self.write("docs/planning/cut-over.md"), "planning phase", "stack gate")
+        self.approve("discovery", "stack")
+        self.assertAllowed(self.write("docs/planning/cut-over.md"))
 
     def test_new_code_needs_every_earlier_gate(self):
         self.assertBlocked(self.write("src/app.py"), "discovery gate")
         self.approve("discovery")
+        self.assertBlocked(self.write("src/app.py"), "stack gate")
+        self.approve("discovery", "stack")
         self.assertBlocked(self.write("src/app.py"), "planning gate")
-        self.approve("discovery", "planning")
+        self.approve("discovery", "stack", "planning")
         self.assertAllowed(self.write("src/app.py"))
 
     def test_relative_paths_are_gated_too(self):
