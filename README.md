@@ -20,12 +20,13 @@ Prose instructions can be ignored, so the important rules are enforced by a `Pre
 |---|---|
 | No work on a phase until every earlier gate is approved | Writes to a phase's paths are blocked until earlier phases have `approved_by` and `date` in the gates file |
 | Only a person approves a gate | The agent can't write the gates file, with file tools or from the shell |
+| Shell commands follow the same rules | Redirections, `tee`, `cp`, `mv`, `touch`, `sed -i`, `dd of=`, `git checkout --` and the like are checked against the gates, following `cd` |
 | The legacy slice is read-only | Writes under `legacy_path` are blocked |
 | A broken config doesn't switch the gates off | An unreadable config or gates file blocks; it doesn't allow |
 
-The hook has 13 tests (`tests/test_gate.py`), which run in CI. `scripts/demo.sh` runs a real Claude Code session that is told to skip ahead and approve its own gates, and checks that it can't.
+The hook's tests (`tests/test_gate.py`) run in CI. `scripts/demo.sh` runs a real Claude Code session that is told to skip ahead and approve its own gates, and checks that it can't.
 
-**Known limits in 0.1.** The shell check looks for the gates file's path in the command, so a deliberately disguised command could get past it. Writes to gated paths from the shell (rather than with the file tools) aren't checked yet. For a hard guarantee, also add a `deny` rule for the gates file in the project's `.claude/settings.json` and use Claude Code's sandbox.
+**Known limits.** The shell check reads commands the way they're usually written. It's a guard against mistakes, not a sandbox: a script, `python -c` or a disguised command can write without the parser seeing it. For a hard guarantee, also add a `deny` rule for the gates file in the project's `.claude/settings.json`, and run Claude Code's sandbox with write access only to the paths of the current phase.
 
 ## Use
 

@@ -84,6 +84,50 @@ class GateHookTest(unittest.TestCase):
     def test_other_shell_commands_are_allowed(self):
         self.assertAllowed(self.run_hook("Bash", command="pytest tests/characterisation"))
 
+    # Shell commands that write to gated paths.
+    def shell(self, command):
+        return self.run_hook("Bash", command=command)
+
+    def test_shell_writes_to_gated_paths_are_blocked(self):
+        for command in [
+            "cat > src/app.py",
+            "echo 'print(1)' >> src/app.py",
+            "echo hi>src/app.py",
+            "make 2>&1 | tee build.log src/out.txt",
+            "cp /tmp/app.py src/app.py",
+            "mv draft.md docs/planning/rfc-0001.md",
+            "touch src/__init__.py",
+            "sed -i 's/a/b/' src/app.py",
+            "dd if=/dev/zero of=src/blob bs=1 count=1",
+            "cd src && touch app.py",
+            "ls; cat > src/app.py <<'EOF'\nprint('it\\'s here')\nEOF",
+            "pytest &> docs/planning/results.txt",
+        ]:
+            with self.subTest(command=command):
+                self.assertBlocked(self.shell(command), "discovery gate")
+
+    def test_shell_writes_allowed_once_the_gates_are_approved(self):
+        self.approve("discovery", "planning")
+        self.assertAllowed(self.shell("cat > src/app.py <<'EOF'\nprint('ok')\nEOF"))
+        self.assertAllowed(self.shell("cd src && touch app.py"))
+
+    def test_shell_reads_and_open_phases_are_allowed(self):
+        for command in [
+            "cat src/app.py",
+            "grep -rn TODO src docs",
+            "cp src/app.py /tmp/app.py",
+            "pytest tests/characterisation 2>&1 | tail -5",
+            "python3 - <<'EOF'\nopen('x') # don't parse me: > src/app.py\nEOF",
+            "cat > docs/discovery/one-pager.md <<'EOF'\nIt's the old slice's job.\nEOF",
+            "echo done > /dev/null",
+        ]:
+            with self.subTest(command=command):
+                self.assertAllowed(self.shell(command))
+
+    def test_shell_writes_to_the_legacy_slice_are_blocked(self):
+        self.assertBlocked(self.shell("sed -i.bak 's/x/y/' legacy/src/Main.java"), "test oracle")
+        self.assertBlocked(self.shell("git checkout -- legacy/src/Main.java"), "test oracle")
+
     # The legacy slice is the test oracle.
     def test_legacy_slice_is_read_only(self):
         self.approve("discovery", "planning", "execution")
