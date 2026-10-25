@@ -3,6 +3,7 @@
   "gates_file": "docs/gates.json",
   "phases": [
     { "name": "discovery", "paths": ["docs/discovery/*", "tests/characterisation/*"] },
+    { "name": "stack", "paths": ["docs/planning/README.md", "docs/planning/rfc-*", "docs/planning/architecture.md"] },
     { "name": "planning", "paths": ["docs/planning/*"] },
     { "name": "execution", "paths": ["src/*", "tests/*"] },
     { "name": "decommission", "paths": ["docs/decommission/*"] }

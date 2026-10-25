@@ -2,7 +2,7 @@
 
 A Claude Code plugin for replacing a legacy system slice with a new one. You build the new slice from requirements, not by porting the old code, and people approve every gate.
 
-**Status: work in progress (version 0.1).** The gate hook and the Discovery phase work. The later phases are on the roadmap below.
+**Status: work in progress (version 0.2).** The gate hook and the Discovery and Planning phases work. The later phases are on the roadmap below.
 
 The method is my own idea (Luke Berry). It's based on my professional experience of project planning and setting quality gates in the era before AI, and on real AI-assisted migrations I have run since then. I developed it with Claude, and turned it into this plugin with Claude Code's help.
 
@@ -42,7 +42,7 @@ Or, from a local clone: `claude --plugin-dir path/to/slice-migration`.
 Then, in the project that holds the legacy slice:
 
 1. `/slice-migration:migrate-init legacy/my-app` writes `.claude/slice-migration.json` and copies the Discovery templates to `docs/discovery/`.
-2. Ask Claude to start Discovery. The `discovery` skill takes it through the phase, step by step.
+2. Ask Claude to start Discovery. The `discovery` skill takes it through the phase, step by step. After the Discovery gate, the `planning` skill does the same for Planning, which has two gates: the stack, then the plan.
 3. `/slice-migration:migrate-status` shows the gates, the current phase and what's waiting on a person.
 4. `/slice-migration:trace` lists requirements with no test, and tests tagged with requirements that don't exist.
 5. When you've reviewed Discovery, approve its gate yourself in `docs/gates.json`:
@@ -61,6 +61,7 @@ Then, in the project that holds the legacy slice:
   "gates_file": "docs/gates.json",
   "phases": [
     { "name": "discovery", "paths": ["docs/discovery/*", "tests/characterisation/*"] },
+    { "name": "stack", "paths": ["docs/planning/README.md", "docs/planning/rfc-*", "docs/planning/architecture.md"] },
     { "name": "planning", "paths": ["docs/planning/*"] },
     { "name": "execution", "paths": ["src/*", "tests/*"] },
     { "name": "decommission", "paths": ["docs/decommission/*"] }
@@ -68,7 +69,7 @@ Then, in the project that holds the legacy slice:
 }
 ```
 
-A path belongs to the first phase that matches it, so `tests/characterisation/` is Discovery's, and other tests are Execution's. `*` matches across folders.
+A path belongs to the first phase that matches it, so `tests/characterisation/` is Discovery's, and other tests are Execution's. Likewise the stack RFC and the new architecture belong to the `stack` phase, and the rest of `docs/planning/` waits for the stack gate. `*` matches across folders.
 
 ## Trace check
 
@@ -95,7 +96,7 @@ Optional `trace` settings in `.claude/slice-migration.json`, with their defaults
 
 ## Roadmap
 
-1. Skills for the later phases: planning (the destination RFC, data migration, cut-over and rollback, vertical slices), execution per slice, decommissioning and evaluation.
+1. Skills for the later phases: execution per slice, decommissioning and evaluation.
 2. Agents: a requirements extractor, an oracle tester, a trace auditor (every requirement to its tests and code), and a gate reviewer.
 3. The trace check extended from requirements and tests to code, and run at each gate.
 4. Per-language settings (for example Python's `decimal.Decimal` rule for money) as optional skills.
