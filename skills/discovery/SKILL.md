@@ -12,6 +12,8 @@ The first phase of `${CLAUDE_PLUGIN_ROOT}/method.md`. Read the method's two prin
 - **Requirements, not porting.** Describe behaviour at the slice's boundary: its UI, its public API, the calls it makes, the data it stores. Never describe classes or methods, because the new slice won't have them.
 - **The old slice is the test oracle.** A requirement drawn from code or documents is a hypothesis until a characterisation test against the running old slice confirms it. When a test shows the reading was wrong, correct the requirement and add a row to `docs/discovery/agent-errors.md`.
 - **Odd behaviour goes to `docs/discovery/keep-or-fix.md`**, never straight into the requirements. Describe it, say who depends on it, and suggest keep or fix. The decision belongs to a person.
+- **Until a person decides, a requirement says what the legacy slice does**, however odd, with a link to its keep-or-fix entry. Never write the fixed behaviour as a requirement in advance, not even marked "pending". Once the person decides, the new slice's requirement for a fixed quirk gets its own ID, so a reversed behaviour never shares an ID with the legacy one.
+- **`agent-errors.md` is for your own misreadings**: where you read the code or documents one way and the running slice did another. When the manual or a config page is wrong, say so in the requirement and its keep-or-fix entry, not in `agent-errors.md`.
 - **Never modify the legacy slice.** Changes to how it's built or run go next to it, not in it. The gate hook blocks writes to `legacy_path`.
 - **Gates belong to people.** You can't write the gates file, and you mustn't try another way. When Discovery is ready, prepare the gate checklist and stop.
 

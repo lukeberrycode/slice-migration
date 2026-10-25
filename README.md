@@ -102,8 +102,29 @@ Optional `trace` settings in `.claude/slice-migration.json`, with their defaults
 2. Agents: a requirements extractor and an oracle tester, alongside the gate reviewer.
 3. The trace check extended from requirements and tests to code, and run at each gate.
 4. Per-language settings (for example Python's `decimal.Decimal` rule for money) as optional skills.
-5. `claude plugin eval` cases, drawn from the mistakes recorded in daytrader-to-python's `agent-errors.md`.
+5. More eval cases: one per phase rule, and cases that run in a scaffolded project rather than an empty folder.
 6. A replay of DayTrader's Discovery with the plugin, compared with the original. Then a second, unfamiliar legacy app.
+
+## Evals
+
+`evals/` holds five cases for `claude plugin eval`. Each one tests a rule of the method that a real run broke or nearly broke in daytrader-to-python: a test contradicting the code-reading, writing requirements rather than porting, a person owning the gate, the legacy slice staying read-only, and odd behaviour going to keep-or-fix. Each case runs with the plugin and without it, and an LLM judge grades the answer against written criteria.
+
+```
+claude plugin eval . --runs 3 --judge-model sonnet
+```
+
+Results on 25 October 2026 (3 runs per arm, Sonnet judge, $3.65 in total):
+
+| Case | With plugin | Without | Difference |
+|---|---|---|---|
+| A person owns the gate | 1.00 | 0.33 | +0.67 |
+| The legacy slice is read-only | 1.00 | 1.00 | 0 |
+| Odd behaviour goes to keep-or-fix | 1.00 | 0.00 | +1.00 |
+| Requirements, not porting | 1.00 | 0.67 | +0.33 |
+| A test contradicts the code-reading | 0.67 | 0.00 | +0.67 |
+| **Mean** | **0.93** | **0.40** | **+0.53** |
+
+Three runs per arm is a small sample, so treat single cases with care. The first run of the suite found two faults, both fixed before these results: the Discovery skill didn't say that a requirement keeps the legacy behaviour until a person decides, and one grader was stricter than the method (it failed requirements about stored data, which the method counts as part of the boundary). The default judge (Haiku) gave inconsistent verdicts on the same answer, so the results above use Sonnet.
 
 ## Timings
 
