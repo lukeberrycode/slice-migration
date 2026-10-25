@@ -1,0 +1,10 @@
+{
+  "legacy_path": "legacy",
+  "gates_file": "docs/gates.json",
+  "phases": [
+    { "name": "discovery", "paths": ["docs/discovery/*", "tests/characterisation/*"] },
+    { "name": "planning", "paths": ["docs/planning/*"] },
+    { "name": "execution", "paths": ["src/*", "tests/*"] },
+    { "name": "decommission", "paths": ["docs/decommission/*"] }
+  ]
+}

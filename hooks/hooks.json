@@ -1,0 +1,17 @@
+{
+  "description": "Enforces the method's gates: no work on a phase until a person has approved every earlier phase. Also keeps the legacy slice read-only, and stops the agent approving its own gates.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/gate.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

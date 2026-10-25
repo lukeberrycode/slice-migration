@@ -1,0 +1,11 @@
+{
+  "name": "slice-migration",
+  "version": "0.1.0",
+  "description": "Replace a legacy system slice with a new one, from requirements rather than by porting code. The old slice is the test oracle, and people approve every gate: a hook blocks work on a phase until its earlier gates are approved.",
+  "author": {
+    "name": "Luke Berry"
+  },
+  "repository": "https://github.com/lukeberrycode/slice-migration",
+  "license": "Apache-2.0",
+  "keywords": ["migration", "legacy", "modernisation", "characterisation-tests", "guardrails"]
+}

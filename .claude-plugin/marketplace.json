@@ -1,0 +1,13 @@
+{
+  "name": "slice-migration",
+  "owner": {
+    "name": "Luke Berry"
+  },
+  "plugins": [
+    {
+      "name": "slice-migration",
+      "source": "./",
+      "description": "Replace a legacy system slice with a new one, from requirements rather than by porting code, with people approving every gate."
+    }
+  ]
+}
