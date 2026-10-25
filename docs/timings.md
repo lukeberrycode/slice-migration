@@ -41,6 +41,11 @@ Against the estimate of 1.75 hours of agent time and 1.25 hours of Luke's. Two a
 
 | | Started | Finished | Luke (h) | Agent (h) | Tokens / cost |
 |---|---|---|---|---|---|
-| Shell writes | 25 Oct 2026 11:58 | | | | |
-| Trace check | | | | | |
-| Planning skill | | | | | |
+| Shell writes (#3) | 25 Oct 2026 11:58 | 11:59 (pull request); merged 12:17 | | about 0.02 | |
+| Trace check (#4) | 11:59 | 12:02 (pull request, then a CI fix); merged 12:18 | | about 0.05 | |
+| Planning skill (#5) | 12:02 | 12:04 (draft pull request); rebased 12:21; merge pending | | about 0.03, plus 0.03 for the rebase | |
+| Not estimated: README on the method's authorship (#6) | 12:09 | 12:10 (pull request); merged 12:16 | | about 0.02 | |
+| Not estimated: answering Luke's questions between steps | | | | about 0.05 | |
+| **Version 0.2, total** | 11:57 | | **0.50** (30 minutes: reviewing and merging #2 to #6, and the force push for #5) | **0.19** (about 11.5 minutes of agent activity, from the session log) | Subscription. 38.8k output, 6.04M cache-read, 55.7k cache-write; API-equivalent $2.43 (11:57 to 12:31) |
+
+Against the estimate of 0.5 hours of agent time and 0.33 hours of Luke's. Luke's time came in over the estimate: there were five pull requests, not three, and the rebase of #5 needed a force push, which Claude Code's permission check reserved for him. Agent times per step are from the gaps between responses in the session log, so they're approximate; the total is more reliable than the split.
