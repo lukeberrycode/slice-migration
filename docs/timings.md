@@ -24,4 +24,23 @@ No estimate without AI has been made yet. That's Luke's to make.
 
 | | Started | Finished | Luke (h) | Agent (h) | Tokens / cost |
 |---|---|---|---|---|---|
-| Version 0.1 | 25 Oct 2026 11:38 | | | | |
+| Version 0.1 | 25 Oct 2026 11:38 | 25 Oct 2026 11:52 (merged) | 0.17 (10 minutes: review, the end-to-end demo, merge) | 0.17 (11:38 to the pull request at about 11:48) | Subscription. 23.6k output, 1.84M cache-read, 37.5k cache-write; API-equivalent $1.14 |
+
+Against the estimate of 1.75 hours of agent time and 1.25 hours of Luke's. Two attempts by the agent to run the end-to-end demo itself were refused by Claude Code's permission checks, so Luke ran `scripts/demo.sh` (PASS). Token figures are from the Claude Code session log (`usage` on each response, 11:38 to 11:49), priced as in `daytrader-to-python`'s `docs/timings.md`: Opus 5.5, per million tokens, input $4.00, output $20.00, cache read $0.20, cache write $8.00.
+
+## Version 0.2
+
+**Estimate (with AI), made 25 October 2026 at 11:58, before work started.** Claude's per-step judgement, rescaled by 0.1's actual pace (about 10 times faster than its estimate). One pull request each.
+
+| Step | Agent | Luke |
+|---|---|---|
+| Gate hook: check shell commands that write to gated paths, with tests | 10 min | 5 min |
+| Trace check: requirements without tests, and tests tagged with unknown requirements; run against `daytrader-to-python` as a real case | 10 min | 5 min |
+| Planning skill and templates: RFC, data migration, cut-over and rollback, vertical slices | 10 min | 10 min |
+| **Total** | **0.5 h** | **0.33 h** |
+
+| | Started | Finished | Luke (h) | Agent (h) | Tokens / cost |
+|---|---|---|---|---|---|
+| Shell writes | 25 Oct 2026 11:58 | | | | |
+| Trace check | | | | | |
+| Planning skill | | | | | |
