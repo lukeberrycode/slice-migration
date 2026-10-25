@@ -23,7 +23,7 @@ The second phase of `${CLAUDE_PLUGIN_ROOT}/method.md`. It starts only when a per
 3. **Evidence.** For each constraint, a spike or a source. Record how each spike was run, so it can be repeated. Run measurements more than once.
 4. **Recommendation**, with the trade-offs stated plainly.
 5. **The new slice's architecture**, in `docs/planning/architecture.md`: the same artefacts as Discovery's `architecture.md`, for the new slice.
-6. **Stop at the stack gate.** List the decisions for the person. Nothing in Part 2 starts until they approve `stack` in the gates file.
+6. **Stop at the stack gate.** Run `/slice-migration:gate-review stack` and fix what it finds, or list each finding you didn't fix and why. List the decisions for the person. Nothing in Part 2 starts until they approve `stack` in the gates file.
 
 ## Part 2: the plan (ends at the plan gate)
 
@@ -33,7 +33,7 @@ The second phase of `${CLAUDE_PLUGIN_ROOT}/method.md`. It starts only when a per
    - success criteria per slice: the characterisation and contract tests passing against the new slice, plus agreed live measures;
    - rollback triggers and the procedure, to be rehearsed once before the first cut-over.
 9. **Vertical slices**, `docs/planning/slices.md`: slices that can be delivered and shown whole, in delivery order. Order by risk and dependency (Discovery's risk ranking). For each slice: its requirement IDs, copied from Discovery, and its elements in dependency order. Every requirement must be in exactly one slice; list any that aren't.
-10. **Stop at the plan gate.** The person approves the slices, their order and the cut-over plan. Execution can't start until they do.
+10. **Stop at the plan gate.** Run `/slice-migration:gate-review planning` first, as at the stack gate. The person approves the slices, their order and the cut-over plan. Execution can't start until they do.
 
 ## Measure the time
 

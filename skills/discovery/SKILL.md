@@ -27,7 +27,7 @@ Work in this order. Each answer is a file in `docs/discovery/` (the templates ar
 6. **Requirements.** `requirements.md`, one row per requirement on a state or transition, each with a test method and status *Hypothesis*. Work from the highest-risk states down, and test those most deeply.
 7. **Characterisation tests**, in `tests/characterisation/`, against the running old slice. Tag each with its requirement ID. Run them. Update each requirement to *Confirmed* or *Corrected*. A surprising result goes to `keep-or-fix.md` first.
 8. **Non-functional requirements** with a number (performance, for example) get a measured baseline on the old slice.
-9. **The gate.** Run the trace check (`/slice-migration:trace`): every requirement needs a tagged test or a "By hand" reason. Fill in the checklist in `README.md`, list the decisions that are waiting on a person (scope, keep-or-fix, sign-off), give your suggestion for each, and stop. Planning can't start until a person approves the gate in the gates file.
+9. **The gate.** Run the trace check (`/slice-migration:trace`): every requirement needs a tagged test or a "By hand" reason. Run `/slice-migration:gate-review` and fix what it finds, or list each finding you didn't fix and why. Fill in the checklist in `README.md`, list the decisions that are waiting on a person (scope, keep-or-fix, sign-off), give your suggestion for each, and stop. Planning can't start until a person approves the gate in the gates file.
 
 ## Measure the time
 
