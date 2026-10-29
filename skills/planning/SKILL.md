@@ -15,6 +15,10 @@ The second phase of `${CLAUDE_PLUGIN_ROOT}/method.md`. It starts only when a per
 - **Gates belong to people.** You can't write the gates file. At each gate, set out the decisions with your suggestion for each, then stop.
 - **Never modify the legacy slice.**
 
+## Before you start: check the handoff
+
+Run `/slice-migration:handoff`. Planning starts from the Discovery handoff in the method, and from nothing else. If the check reports problems, stop and tell the person: they belong to Discovery. Note whether it says there's an old slice to replace. If there isn't, skip the data migration (step 7) and the cut-over mechanism (step 8), and plan the success criteria and rollback for the new slice alone.
+
 ## Part 1: the stack (ends at the stack gate)
 
 0. **Copy the Planning templates** from `${CLAUDE_PLUGIN_ROOT}/templates/planning/` to `docs/planning/`, never overwriting a file that's there. The gate hook allows the RFC, the architecture and the README now, and the rest only after the stack gate.

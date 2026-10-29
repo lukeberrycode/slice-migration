@@ -46,6 +46,7 @@ Then, in the project that holds the legacy slice:
 2. Ask Claude to start Discovery. The `discovery` skill takes it through the phase, step by step. After the Discovery gate, the `planning` skill does the same for Planning, which has two gates: the stack, then the plan.
 3. `/slice-migration:migrate-status` shows the gates, the current phase and what's waiting on a person.
 4. `/slice-migration:trace` lists requirements with no test, and tests tagged with requirements that don't exist.
+   `/slice-migration:handoff` checks that Discovery's output meets the method's Discovery handoff, which is all Planning starts from.
 5. `/slice-migration:gate-review` has the read-only `gate-reviewer` agent check the phase before you decide its gate, and saves its report in `docs/reviews/`.
 6. When you've reviewed Discovery, approve its gate yourself in `docs/gates.json`:
 
@@ -95,6 +96,37 @@ Optional `trace` settings in `.claude/slice-migration.json`, with their defaults
 ```
 
 `tag` is a regular expression whose first group holds the IDs. `exempt` lists ID patterns to report but not fail, such as `"N$"` for requirements whose tests come in a later phase.
+
+## Handoff check
+
+`scripts/handoff.py` checks that Discovery's output meets [the Discovery handoff](method.md#the-discovery-handoff): what Planning and later phases start from, whether the requirements came from an old slice, a new design or both. It checks:
+
+1. Users, states and journeys in `users-states-journeys.md`, with a risk for every state.
+2. Every requirement has a state or transition, a test method and a source (*Old slice*, *Fixed* or *Design*), and none is still a *Hypothesis*. A *Fixed* requirement names its keep-or-fix entry. A dropped one has a reason and who decided.
+3. Every requirement has a tagged boundary test or a "By hand" reason, using the trace check's settings. `trace.exempt` doesn't apply here: by the handoff, every requirement has its test, even one that fails until Execution.
+4. Every non-functional requirement with a measure has a baseline or a target.
+5. Every row of the decision log (`keep-or-fix.md`, and the scope decisions in `requirements.md`) has a decision and who made it.
+6. A person has approved the Discovery gate. `--before-sign-off` skips this, for use before the gate.
+
+When `legacy_path` exists, it's replacing an old slice, so it also checks the replacement inputs: the old slice's architecture, its data inventory, and the characterisation tests. It exits 1 if anything is missing:
+
+```
+python3 path/to/slice-migration/scripts/handoff.py --before-sign-off .
+```
+
+It checks structure, not meaning: that a decision names someone, not that they're a person. The `gate-reviewer` checks the meaning. Optional `handoff` paths in `.claude/slice-migration.json`, with their defaults:
+
+```json
+"handoff": {
+  "users": "docs/discovery/users-states-journeys.md",
+  "decisions": ["docs/discovery/keep-or-fix.md"],
+  "architecture": "docs/discovery/architecture.md",
+  "data_inventory": "docs/discovery/data-inventory.md",
+  "characterisation": "tests/characterisation"
+}
+```
+
+A Discovery from a new design would list its assumptions log in `decisions`.
 
 ## Roadmap
 
