@@ -1,6 +1,6 @@
 # Plan: Discovery from a new design
 
-**Status:** proposed, 6 November 2026. Steps 0 and 1 done; step 2 is next. Decisions 2 and 3 went with their suggestions.
+**Status:** proposed, 6 November 2026. Steps 0 to 2 done; step 3 is next. Decisions 2, 3 and 5 went with their suggestions.
 
 ## The task
 
@@ -78,6 +78,8 @@ Its rules, in the same form as the `discovery` skill's:
 - **Gates belong to people.**
 
 It measures time as the `discovery` skill does.
+
+`migrate-init`'s report names this skill, in place of pointing to the method.
 
 ### 4. Status, gate review and the reviewer
 
