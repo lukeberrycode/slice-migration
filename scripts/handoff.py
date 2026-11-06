@@ -21,7 +21,7 @@ the handoff names, whatever source the requirements came from:
 It also checks "IDs and links" in method.md, on which review of the above relies:
 every user, state, transition and requirement has a well-formed, unique ID and an
 anchor, and links back to the definitions it depends on, and every link in these
-files leads somewhere. Older IDs such as AUTH-1 don't pass here, though the trace
+files leads to an anchor or a heading. Older IDs such as AUTH-1 don't pass here, though the trace
 check still reads them.
 
 When there's an old slice to replace (`legacy_path` exists), it also checks the
@@ -64,6 +64,9 @@ RESERVED = {"TO", "REQ"}  # Mark the parts of an ID, so they can't be a whole st
 INLINE_CODE = re.compile(r"`[^`]*`")
 LINK = re.compile(r"\[[^\]]*\]\(([^)#\s]*)#([^)\s]+)\)")
 ANCHOR_ID = re.compile(r'<a\s+id="([^"]+)"\s*>\s*</a>')
+HEADING = re.compile(r"^ {0,3}#{1,6}[ \t]+(.*?)(?:[ \t]+#+)?[ \t]*$", re.M)
+# Inline code, an HTML tag, a link or image, or underscore emphasis: what a heading renders as.
+HEADING_MARKUP = re.compile(r"`([^`]*)`|<[^>]+>|!?\[([^\]]*)\]\([^)]*\)|(?<!\w)_+(.+?)_+(?!\w)")
 
 
 def valid_state(text: str) -> bool:
@@ -85,15 +88,35 @@ def valid_requirement(text: str) -> bool:
     return bool(match) and (valid_state(match[1]) or valid_transition(match[1]))
 
 
-def visible(path: Path) -> str:
-    """The file's text, without code: an example of a link or anchor isn't one."""
+def unfenced(path: Path) -> str:
+    """The file's text, without code blocks."""
     lines, fenced = [], False
     for line in path.read_text(encoding="utf-8").splitlines():
         if line.lstrip().startswith("```"):
             fenced = not fenced
         elif not fenced:
-            lines.append(INLINE_CODE.sub("", line))
+            lines.append(line)
     return "\n".join(lines)
+
+
+def visible(path: Path) -> str:
+    """The file's text, without code: an example of a link or anchor isn't one."""
+    return INLINE_CODE.sub("", unfenced(path))
+
+
+def heading_anchors(path: Path) -> set:
+    """The anchors GitHub generates for the file's headings: `## Quote latency` is #quote-latency.
+
+    Lower case, punctuation removed, each space a hyphen, and a repeated heading
+    numbered from its second use (#limit, #limit-1).
+    """
+    found, seen = set(), Counter()
+    for heading in HEADING.findall(unfenced(path)):
+        text = HEADING_MARKUP.sub(lambda m: next((g for g in m.groups() if g), ""), heading)
+        anchor = re.sub(r"[^\w\- ]", "", text.strip().lower()).replace(" ", "-")
+        found.add(f"{anchor}-{seen[anchor]}" if seen[anchor] else anchor)
+        seen[anchor] += 1
+    return found
 
 
 def linked(text: str) -> list:
@@ -357,7 +380,7 @@ class Handoff:
                 self.problem(f"{found}: {state} isn't in the states table.")
 
     def links(self):
-        """Every link to an anchor, in the files that hold the definitions, leads somewhere."""
+        """Every link to an anchor or heading, in the files that hold the definitions, leads somewhere."""
         files = [self.paths["users"], self.trace["requirements"], *self.paths["decisions"]]
         for rel in files:
             path = self.project / rel
@@ -367,7 +390,7 @@ class Handoff:
                 if "://" in file:
                     continue
                 target = (path.parent / file) if file else path
-                if not target.is_file() or fragment not in ANCHOR_ID.findall(visible(target)):
+                if not target.is_file() or fragment not in {*ANCHOR_ID.findall(visible(target)), *heading_anchors(target)}:
                     self.problem(f"{rel}: the link to {file}#{fragment} goes nowhere.")
 
     def tests(self, reqs: dict):

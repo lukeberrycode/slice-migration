@@ -294,6 +294,72 @@ class HandoffTest(unittest.TestCase):
         self.replace(REQUIREMENTS_FILE, "# Requirements\n", "# Requirements\n\nFor example `[X](#Y)`.\n\n```\n[X](#Y)\n```\n")
         self.assertEqual(self.run_handoff().returncode, 0)
 
+    def link_to_constraints(self, fragment, constraints):
+        self.write("docs/discovery/constraints.md", constraints)
+        self.replace(REQUIREMENTS_FILE, "| 40 ms |", f"| 40 ms, see [the limit](constraints.md#{fragment}) |")
+
+    def test_a_link_can_reach_a_heading(self):
+        self.link_to_constraints("quote-latency", "# Constraints\n\n## Quote latency\n\nUnder 40 ms.\n")
+        result = self.run_handoff()
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_a_link_can_reach_a_heading_in_its_own_file(self):
+        self.replace(REQUIREMENTS_FILE, "# Requirements\n", "# Requirements\n\nSee [scope](#scope).\n\n## Scope\n")
+        result = self.run_handoff()
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_a_link_to_a_heading_that_is_not_there_fails(self):
+        self.link_to_constraints("quote-speed", "## Quote latency\n")
+        self.assertProblem("the link to constraints.md#quote-speed goes nowhere.")
+
+    def test_a_link_to_a_heading_must_use_its_generated_anchor(self):
+        self.link_to_constraints("Quote-Latency", "## Quote latency\n")
+        self.assertProblem("the link to constraints.md#Quote-Latency goes nowhere.")
+
+    def test_a_heading_anchor_follows_the_rendered_text(self):
+        headings = {
+            "## Quote latency ##": "quote-latency",
+            "### Latency: p95 (EU)": "latency-p95-eu",
+            "## Risk & reward": "risk--reward",
+            "## The `max_size` limit": "the-max_size-limit",
+            "## The `<T>` type": "the-t-type",
+            "## **Bold** and _italic_": "bold-and-italic",
+            "## See [the API](api.md#top)": "see-the-api",
+            '## <a id="other"></a>Tagged': "tagged",
+            "## Café": "café",
+        }
+        for heading, anchor in headings.items():
+            with self.subTest(heading):
+                self.write(REQUIREMENTS_FILE, REQUIREMENTS)
+                self.link_to_constraints(anchor, heading + "\n")
+                result = self.run_handoff()
+                self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_a_repeated_heading_gets_a_numbered_anchor(self):
+        self.link_to_constraints("limit-1", "## Limit\n\n## Limit\n")
+        self.assertEqual(self.run_handoff().returncode, 0)
+        self.replace(REQUIREMENTS_FILE, "constraints.md#limit-1", "constraints.md#limit-2")
+        self.assertProblem("the link to constraints.md#limit-2 goes nowhere.")
+
+    def test_a_heading_shown_as_code_is_not_a_heading(self):
+        self.link_to_constraints("quote-latency", "```\n## Quote latency\n```\n")
+        self.assertProblem("the link to constraints.md#quote-latency goes nowhere.")
+
+    def test_seven_hashes_or_no_space_is_not_a_heading(self):
+        for text in ("####### Quote latency\n", "##Quote latency\n"):
+            with self.subTest(text):
+                self.write(REQUIREMENTS_FILE, REQUIREMENTS)
+                self.link_to_constraints("quote-latency", text)
+                self.assertProblem("the link to constraints.md#quote-latency goes nowhere.")
+
+    def test_a_definition_still_needs_its_anchor_when_it_has_a_heading(self):
+        self.replace(USERS_FILE, '<a id="TRAD_OUT"></a>TRAD_OUT |', "TRAD_OUT |")
+        self.replace(USERS_FILE, "# Users, states and journeys\n", "# Users, states and journeys\n\n## TRAD_OUT\n")
+        result = self.run_handoff()
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("TRAD_OUT: no anchor for links to reach it.", result.stdout)
+        self.assertIn("the link to #TRAD_OUT goes nowhere.", result.stdout)
+
     def test_no_transitions_fails(self):
         self.write(USERS_FILE, USERS.split("| ID | Transition |")[0] + USERS[USERS.index("| Journey |"):])
         self.assertProblem("no transitions.")
