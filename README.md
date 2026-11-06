@@ -130,12 +130,13 @@ A Discovery from a new design would list its assumptions log in `decisions`.
 
 ## Roadmap
 
-1. Skills for the later phases: execution per slice, decommissioning and evaluation.
-2. Agents: a requirements extractor and an oracle tester, alongside the gate reviewer.
-3. The trace check extended from requirements and tests to code, and run at each gate.
-4. Per-language settings (for example Python's `decimal.Decimal` rule for money) as optional skills.
-5. More eval cases: one per phase rule, and cases that run in a scaffolded project rather than an empty folder.
-6. A replay of DayTrader's Discovery with the plugin, compared with the original. Then a second, unfamiliar legacy app.
+1. Discovery from a new design, the method's second Discovery source: a skill, templates, `migrate-init` and status support, gate-reviewer items and evals. The plan is in [docs/plans/discovery-from-a-new-design.md](docs/plans/discovery-from-a-new-design.md).
+2. Skills for the later phases: execution per slice, decommissioning and evaluation.
+3. Agents: a requirements extractor and an oracle tester, alongside the gate reviewer.
+4. The trace check extended from requirements and tests to code, and run at each gate.
+5. Per-language settings (for example Python's `decimal.Decimal` rule for money) as optional skills.
+6. More eval cases: one per phase rule, and cases that run in a scaffolded project rather than an empty folder.
+7. A replay of DayTrader's Discovery with the plugin, compared with the original. Then a second, unfamiliar legacy app.
 
 ## Evals
 
