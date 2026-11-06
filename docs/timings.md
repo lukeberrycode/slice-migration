@@ -75,3 +75,4 @@ One row per step of [the plan](plans/discovery-from-a-new-design.md). Token figu
 | Step | Date | Tokens / cost |
 |---|---|---|
 | 0. Links to headings | 6 Nov 2026 | Subscription. 11.6k output, 476k cache-read, 36.3k cache-write; API-equivalent $0.62 |
+| 1. Templates | 6 Nov 2026 | Subscription. 20.0k output, 903k cache-read, 36.8k cache-write; API-equivalent $0.88 (the same session, since step 0's row, so it includes the end of step 0) |

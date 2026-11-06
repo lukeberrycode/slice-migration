@@ -1,6 +1,6 @@
 # Plan: Discovery from a new design
 
-**Status:** proposed, 6 November 2026. Step 0 done; step 1 is next.
+**Status:** proposed, 6 November 2026. Steps 0 and 1 done; step 2 is next. Decisions 2 and 3 went with their suggestions.
 
 ## The task
 
@@ -45,7 +45,7 @@ Split `templates/discovery/` by source:
 - **From a new design, new:**
   - `one-pager.md`: the problem, who has it, the outcome the product should bring, and what's out of scope.
   - `constraints.md`: the services it calls and the client software that will call it, with their APIs; the data it will own and where that data comes from; regulatory, security and performance limits, each with a target where it has a number. Each constraint has a heading or an anchor, so a requirement can link to it.
-  - `assumptions.md`: the decision log. Each assumption or open question, the risk if it's wrong, the suggestion, the decision, and who decided. Its columns are the ones the handoff check reads (Decision, Decided by), with IDs such as `AS-1`, each starting with its anchor (`<a id="AS-1"></a>AS-1`), so a requirement can link to the assumption it rests on.
+  - `assumptions.md`: the decision log. Each assumption or open question, the risk if it's wrong, the suggestion, the decision, its reason, and who decided. Its columns are the ones the handoff check reads (Decision, Decided by), with IDs such as `AS-1`, each starting with its anchor (`<a id="AS-1"></a>AS-1`), so a requirement can link to the assumption it rests on.
 
 A test copies each source's templates into a project and runs the handoff check on them, as `test_the_templates_have_the_columns_the_handoff_needs` does now.
 

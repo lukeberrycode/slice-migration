@@ -1,6 +1,8 @@
-# <Legacy slice>: users, states and journeys
+# <Slice>: users, states and journeys
 
 IDs and links follow "IDs and links" in the method. Each row's ID starts with its anchor, so that it can be linked to, and each definition links back to what it depends on. A reviewer can follow those links from any requirement back to its user. For example, a state's first cells are `<a id="CONS_BROWSING"></a>CONS_BROWSING`, `Browsing` and, under User, `[CONS](#CONS)`.
+
+From the old slice, these are observed. From a new design, they're designed: each one comes from a person, their research or the one-pager, never from the agent alone.
 
 ## Users
 
