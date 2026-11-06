@@ -11,6 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 HOOK = ROOT / "hooks" / "gate.py"
 CONFIG = ROOT / "templates" / "config.json"
+DESIGN_CONFIG = ROOT / "templates" / "config-design.json"
 
 
 class GateHookTest(unittest.TestCase):
@@ -149,6 +150,52 @@ class GateHookTest(unittest.TestCase):
     def test_broken_config_blocks(self):
         (self.project / ".claude" / "slice-migration.json").write_text("{}")
         self.assertBlocked(self.write("docs/discovery/one-pager.md"), "can't be read")
+
+    # A new design: no old slice, and contract tests are Discovery's.
+    def use_design_config(self):
+        shutil.copy(DESIGN_CONFIG, self.project / ".claude" / "slice-migration.json")
+
+    def test_an_empty_legacy_path_treats_nothing_as_the_legacy_slice(self):
+        self.use_design_config()
+        for rel in ("README.md", "notes.md", "legacy/notes.md"):
+            with self.subTest(rel):
+                self.assertAllowed(self.write(rel))
+                self.assertAllowed(self.shell(f"touch {rel}"))
+
+    def test_a_design_can_write_its_discovery_and_contract_tests_from_the_start(self):
+        self.use_design_config()
+        self.assertAllowed(self.write("docs/discovery/constraints.md"))
+        self.assertAllowed(self.write("docs/discovery/assumptions.md"))
+        self.assertAllowed(self.write("tests/contract/test_prices_api.py"))
+
+    def test_a_design_writes_no_other_tests_or_code_in_discovery(self):
+        self.use_design_config()
+        for rel in ("tests/test_boundary.py", "tests/characterisation/test_old.py", "src/app.py"):
+            with self.subTest(rel):
+                self.assertBlocked(self.write(rel), "execution phase", "discovery gate")
+
+    def test_a_design_keeps_the_gates(self):
+        self.use_design_config()
+        self.assertBlocked(self.write("docs/gates.json"), "only a person")
+        self.assertBlocked(self.write("docs/planning/rfc-0001.md"), "stack phase", "discovery gate")
+        self.approve("discovery")
+        self.assertAllowed(self.write("docs/planning/rfc-0001.md"))
+        self.assertBlocked(self.write("src/app.py"), "stack gate")
+
+    def test_the_old_slice_config_gives_contract_tests_to_execution(self):
+        self.assertBlocked(self.write("tests/contract/test_prices_api.py"), "execution phase", "discovery gate")
+
+    def test_the_two_configs_differ_only_by_source(self):
+        legacy = json.loads(CONFIG.read_text())
+        design = json.loads(DESIGN_CONFIG.read_text())
+        self.assertEqual(legacy["legacy_path"], "legacy")
+        self.assertEqual(design["legacy_path"], "")
+        self.assertEqual(design["handoff"], {"decisions": ["docs/discovery/assumptions.md"]})
+        self.assertNotIn("handoff", legacy)
+        self.assertEqual(legacy["gates_file"], design["gates_file"])
+        self.assertEqual(legacy["phases"][1:], design["phases"][1:])
+        self.assertEqual(legacy["phases"][0]["paths"], ["docs/discovery/*", "tests/characterisation/*"])
+        self.assertEqual(design["phases"][0]["paths"], ["docs/discovery/*", "tests/contract/*"])
 
     def test_projects_without_the_config_are_left_alone(self):
         (self.project / ".claude" / "slice-migration.json").unlink()

@@ -1,0 +1,14 @@
+{
+  "legacy_path": "",
+  "gates_file": "docs/gates.json",
+  "handoff": {
+    "decisions": ["docs/discovery/assumptions.md"]
+  },
+  "phases": [
+    { "name": "discovery", "paths": ["docs/discovery/*", "tests/contract/*"] },
+    { "name": "stack", "paths": ["docs/planning/README.md", "docs/planning/rfc-*", "docs/planning/architecture.md"] },
+    { "name": "planning", "paths": ["docs/planning/*"] },
+    { "name": "execution", "paths": ["src/*", "tests/*"] },
+    { "name": "decommission", "paths": ["docs/decommission/*"] }
+  ]
+}

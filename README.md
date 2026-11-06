@@ -56,7 +56,7 @@ Then, in the project that holds the legacy slice:
 
 ### Config
 
-`.claude/slice-migration.json` (default in `templates/config.json`):
+`.claude/slice-migration.json` (default in `templates/config.json`; for a new design, `templates/config-design.json`, which has no `legacy_path`, reads its decisions from `assumptions.md`, and gives Discovery `tests/contract/*` rather than `tests/characterisation/*`):
 
 ```json
 {

@@ -10,6 +10,8 @@ from pathlib import Path
 
 HANDOFF = Path(__file__).resolve().parent.parent / "scripts" / "handoff.py"
 TEMPLATES = Path(__file__).resolve().parent.parent / "templates" / "discovery"
+OLD_SLICE_CONFIG = TEMPLATES.parent / "config.json"
+DESIGN_CONFIG = TEMPLATES.parent / "config-design.json"
 
 USERS = """# Users, states and journeys
 
@@ -431,7 +433,7 @@ class HandoffTest(unittest.TestCase):
 
     def test_the_old_slice_templates_have_what_the_handoff_needs(self):
         self.use_templates("legacy")
-        self.write(".claude/slice-migration.json", json.dumps({"legacy_path": "legacy"}))
+        self.write(".claude/slice-migration.json", OLD_SLICE_CONFIG.read_text())
         self.write("legacy/Main.java", "public class Main {}\n")
         out = self.run_handoff("--before-sign-off").stdout
         self.assertIn("Replacing an old slice: yes.", out)
@@ -440,7 +442,7 @@ class HandoffTest(unittest.TestCase):
 
     def use_design_templates(self):
         self.use_templates("design")
-        self.write(".claude/slice-migration.json", json.dumps({"legacy_path": "", "handoff": {"decisions": ["docs/discovery/assumptions.md"]}}))
+        self.write(".claude/slice-migration.json", DESIGN_CONFIG.read_text())
         self.write("tests/test_boundary.py", "")
 
     def test_the_design_templates_have_what_the_handoff_needs(self):
@@ -466,6 +468,14 @@ class HandoffTest(unittest.TestCase):
         result = self.run_handoff("--before-sign-off")
         self.assertEqual(result.returncode, 0, result.stdout)
         self.assertIn("Tests due in Execution (2, fixed or design): TRAD_IN_REQ_1, TRAD_OUT_TO_IN_REQ_1.", result.stdout)
+
+    def test_a_contract_test_written_in_discovery_counts(self):
+        self.fill_design_templates()
+        self.write("tests/contract/test_prices_api.py", 'req("TRAD_IN_REQ_1")\n')
+        result = self.run_handoff("--before-sign-off")
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertIn("2 requirements; 1 traced to tests.", result.stdout)
+        self.assertIn("Tests due in Execution (1, fixed or design): TRAD_OUT_TO_IN_REQ_1.", result.stdout)
 
     def test_an_undecided_assumption_fails_the_handoff(self):
         self.fill_design_templates()
