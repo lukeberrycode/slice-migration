@@ -162,6 +162,10 @@ Three runs per arm is a small sample, so treat single cases with care. The first
 
 See `docs/timings.md`.
 
+## Maintenance tasks
+
+- **Pinned runner upkeep.** CI runs on a pinned image (`runs-on: ubuntu-24.04` in `.github/workflows/test.yml`), so it won't update itself. Change the label by hand before GitHub retires that image ([supported runners](https://docs.github.com/en/actions/reference/runners/github-hosted-runners#supported-runners-and-hardware-resources)). The tests use the image's own `python3`, so a new image can also mean a new Python version: check that the Test workflow passes after the change.
+
 ## Licence
 
 Apache 2.0.
