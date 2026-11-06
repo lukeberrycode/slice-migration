@@ -6,10 +6,12 @@ Requirements start as a hypothesis drawn from the code. A characterisation test 
 
 Behaviour that looks wrong is described as it is, with a link to `keep-or-fix.md`. The gate decides whether the new slice keeps it.
 
+**Source** (the Discovery handoff in `method.md`): *old slice* = the legacy behaviour, kept; *fixed* = a legacy quirk, corrected by a keep-or-fix decision, whose entry the row names (for example `KF-3`); *design* = new.
+
 ## Scope (decided at the gate)
 
-| # | Question | Suggestion | Decision |
-|---|---|---|---|
+| # | Question | Suggestion | Decision | Decided by |
+|---|---|---|---|---|
 
 ## Features in the manual, and their requirements
 
@@ -18,13 +20,13 @@ Behaviour that looks wrong is described as it is, with a link to `keep-or-fix.md
 
 ## Requirements
 
-| ID | State or transition | Requirement | Test | Status |
-|---|---|---|---|---|
+| ID | State or transition | Requirement | Test | Source | Status |
+|---|---|---|---|---|---|
 
 ## Non-functional requirements
 
-| ID | Requirement | Measure | Baseline | Status |
-|---|---|---|---|---|
+| ID | Requirement | Measure | Baseline or target | Source | Status |
+|---|---|---|---|---|---|
 
 ## Dropped (decided at the gate)
 

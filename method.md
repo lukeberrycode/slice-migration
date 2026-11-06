@@ -37,7 +37,7 @@ A requirement is only a hypothesis until something confirms it, and every requir
 What confirms a requirement depends on where it came from:
 
 - **From the old slice, the old slice is the test oracle.** Requirements that AI draws out of code and documents are only a hypothesis about what the old slice does. Tests run against the running old slice confirm or correct that hypothesis.
-- **From a new design, people are the oracle.** There's nothing yet to run the tests against. A requirement is confirmed by the people it's for: through a prototype, user research or a walkthrough of their journeys. Its boundary test is still written in Discovery, and fails until Execution builds what it tests.
+- **From a new design, people are the oracle.** There's nothing yet to run the tests against. A requirement is confirmed by the people it's for: through a prototype, user research or a walkthrough of their journeys. Its test method is agreed in Discovery, and its boundary test is written first in Execution, before what it tests is built.
 
 ## Generic timeline
 
@@ -65,7 +65,7 @@ What confirms a requirement depends on where it came from:
     - Who are its **users**, and per user, what **states** and **journeys** should the product have? Which states carry the most risk? What are the **requirements** of each state and transition, how do we **test** each one, and do the tests need any mocking tools? _the same answers as for the old slice (users, states, a risk ranking, journeys, requirements, test methods and mocking tools), designed rather than observed_
     - Do the people it's for agree that this is what they need? _each requirement confirmed with them through a prototype, user research or a walkthrough of the journeys, with the confirmation recorded against the requirement_
     - What have we assumed? _a decision log: each assumption or open question, the risk if it's wrong, and the decision with who made it and its reason_
-    - Can each requirement be tested at the slice's boundary? _a boundary test per requirement, traced to it, written now and failing until Execution builds what it tests. Contract tests for the services it calls and for its client software_
+    - Can each requirement be tested at the slice's boundary? _a test method per requirement, concrete enough to write its boundary test from: the set-up, what's done at the boundary, and what's checked. The boundary tests, and the contract tests for the services it calls and for its client software, are written in Execution, each before what it tests is built_
   - From both (a redesign of an old slice): _the old slice's steps for what's kept, the design's steps for what changes, with each requirement's source recorded_
   - **[GATE]** Are the requirements, the test methods and the decisions approved? _signed-off requirements, meeting the Discovery handoff. This is also where anything AI identified as a requirement can be dropped, with the reason recorded_
 - Planning:
@@ -74,7 +74,7 @@ What confirms a requirement depends on where it came from:
   - **[REPLACEMENT]** How does the data move? _a data migration plan: schema mapping, migration scripts, a rollback path, and a check that the new slice reads the old data the same way (or a reason it doesn't need to, if the data stays where it is)_
   - Plan going live:
     - **[REPLACEMENT]** How can we maintain the old slice, and control cut-over to the new slice, to prevent a 'big bang' change? _cut-over mechanism and plan: strangler fig routing, feature flags, or running both slices in parallel and comparing their outputs_
-    - How do we know a slice has gone live successfully? _success criteria per slice: the boundary and contract tests from Discovery passing against the new slice, plus agreed live measures (errors, performance)_
+    - How do we know a slice has gone live successfully? _success criteria per slice: its boundary and contract tests passing against the new slice, plus agreed live measures (errors, performance)_
     - What makes us roll back, and how? _rollback triggers and the rollback procedure (to the old slice, where there is one), rehearsed once before the first slice goes live_
   - What are the vertical slices of the product, that can be delivered and presented whole? _a list of vertical slices, in delivery order_
     - Per vertical slice:
@@ -84,8 +84,8 @@ What confirms a requirement depends on where it came from:
 - Execution:
   - Per slice:
     - Per element:
-      - Create the element and run tests. _the element, every one of its requirements traced to passing tests and to the code that meets it, 100% tests passed_
-    - **[GATE]** Is the slice accepted? _the slice's boundary and contract tests from Discovery passing against the new slice; human review of the code_
+      - Write the tests still due for the element's requirements (fixed or from a new design), then create the element and run tests. _the element, every one of its requirements traced to passing tests and to the code that meets it, 100% tests passed_
+    - **[GATE]** Is the slice accepted? _the slice's boundary and contract tests, from Discovery and from Execution, passing against the new slice; human review of the code_
     - Put the slice live (**[REPLACEMENT]** cutting over from the old slice). _the slice live, with its success criteria met (or rolled back, with the reason recorded)_
     - Continuous evaluation:
       - What lessons can be learned? _list of lessons learned_
@@ -109,7 +109,7 @@ Delivery starts from what the Discovery gate approves, and from nothing else. Wh
 
 1. **Users, states and journeys**, with the risk ranking of the states. Delivery orders its vertical slices by it.
 2. **The requirements.** Each one has an ID; the state or transition it belongs to; the requirement itself, as behaviour at the slice's boundary; its test method; and its **source**: _old slice_ (legacy behaviour, kept), _fixed_ (a legacy quirk, corrected by a keep-or-fix decision) or _design_ (new). Dropped requirements are listed, with the reason and who decided.
-3. **A boundary test for every requirement**, traced to its ID, or the reason it's checked by hand. From the old slice, the tests pass against the old slice. From a new design, they fail until Execution builds what they test. Either way, the trace from requirement to test is checked the same way.
+3. **A boundary test, or a test method, for every requirement.** A requirement from the old slice has a test traced to its ID and passing against the old slice, or the reason it's checked by hand: the oracle is there to test it now. A fixed or design requirement has a test method concrete enough to write its test from (the set-up, what's done at the boundary, and what's checked). Nothing can pass its test yet, because the old slice behaves otherwise and the new slice doesn't exist, so the test is due in Execution: written first, before what it tests, and needed for the slice's acceptance. A test already written for one counts too. Either way, the trace from requirement to test is checked the same way.
 4. **A number for every non-functional requirement that has one:** a baseline measured on the old slice, or a target set by the design.
 5. **The decision log**, so that every requirement can be traced to why it's there: keep-or-fix decisions from the old slice, and assumptions and open questions from a new design. Each decision names the person who made it.
 6. **The sign-off:** the Discovery gate, approved by a person.
@@ -132,3 +132,4 @@ The method is refined as it's used. Each change gets a dated line here; the git 
 
 - **23 October 2026:** first public version, from Luke's draft, with: the old slice as test oracle; human gates; non-functional requirements; measured times; a working local environment; a data inventory; a risk ranking of states; characterisation and contract tests; a keep-or-fix log; an RFC for the destination stack; data migration, cut-over, success criteria and rollback; traceability; decommissioning; estimated against actual times. Decided: tests for an old slice without them are written in the "Does the old slice actually behave…?" step; "prioritise" means order, dropping and depth.
 - **29 October 2026:** Discovery and Delivery split by a handoff, so the requirements can come from an old slice, a new design or both. Added: Discovery from a new design; the Discovery handoff; a source for each requirement; targets as well as baselines; **[REPLACEMENT]** steps, skipped when nothing is being replaced. The second principle now covers both sources: the old slice is the oracle for requirements drawn from it, and people are the oracle for a new design. "Planning the Migration" and "Executing the Migration" are now "Planning" and "Execution". The Generic Timeline is formatted as a list. The plugin doesn't follow this yet: it runs Discovery from the old slice only.
+- **6 November 2026:** a fixed or design requirement reaches the handoff with a test method, not a test. Its test is due in Execution, written before what it tests, and the slice's acceptance needs it. A requirement from the old slice still has its test at the handoff, since the old slice can confirm it now.

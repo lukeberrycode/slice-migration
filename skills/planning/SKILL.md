@@ -15,6 +15,10 @@ The second phase of `${CLAUDE_PLUGIN_ROOT}/method.md`. It starts only when a per
 - **Gates belong to people.** You can't write the gates file. At each gate, set out the decisions with your suggestion for each, then stop.
 - **Never modify the legacy slice.**
 
+## Before you start: check the handoff
+
+Run `/slice-migration:handoff`. Planning starts from the Discovery handoff in the method, and from nothing else. If the check reports problems, stop and tell the person: they belong to Discovery. Note whether it says there's an old slice to replace. If there isn't, skip the data migration (step 7) and the cut-over mechanism (step 8), and plan the success criteria and rollback for the new slice alone.
+
 ## Part 1: the stack (ends at the stack gate)
 
 0. **Copy the Planning templates** from `${CLAUDE_PLUGIN_ROOT}/templates/planning/` to `docs/planning/`, never overwriting a file that's there. The gate hook allows the RFC, the architecture and the README now, and the rest only after the stack gate.
@@ -30,9 +34,9 @@ The second phase of `${CLAUDE_PLUGIN_ROOT}/method.md`. It starts only when a per
 7. **Data migration**, `docs/planning/data-migration.md`: schema mapping, scripts, a rollback path, and a check that the new slice reads the old data the same way. If the data stays where it is, say why that's safe.
 8. **Cut-over**, `docs/planning/cut-over.md`:
    - the mechanism that avoids a big bang: strangler fig routing, feature flags, or both slices in parallel with outputs compared;
-   - success criteria per slice: the characterisation and contract tests passing against the new slice, plus agreed live measures;
+   - success criteria per slice: its boundary and contract tests, from Discovery and from Execution, passing against the new slice, plus agreed live measures;
    - rollback triggers and the procedure, to be rehearsed once before the first cut-over.
-9. **Vertical slices**, `docs/planning/slices.md`: slices that can be delivered and shown whole, in delivery order. Order by risk and dependency (Discovery's risk ranking). For each slice: its requirement IDs, copied from Discovery, and its elements in dependency order. Every requirement must be in exactly one slice; list any that aren't.
+9. **Vertical slices**, `docs/planning/slices.md`: slices that can be delivered and shown whole, in delivery order. Order by risk and dependency (Discovery's risk ranking). For each slice: its requirement IDs, copied from Discovery, and its elements in dependency order. Mark the requirements whose tests are due in Execution (the handoff check lists them): each element's due tests are written before the element. Every requirement must be in exactly one slice; list any that aren't.
 10. **Stop at the plan gate.** Run `/slice-migration:gate-review planning` first, as at the stack gate. The person approves the slices, their order and the cut-over plan. Execution can't start until they do.
 
 ## Measure the time
