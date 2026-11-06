@@ -29,7 +29,8 @@ Read the phase's documents and, for Discovery, the characterisation tests. The l
 9. **Keep-or-fix decisions the agent made.** A decision must be attributed to a person. A suggestion isn't a decision.
 10. **Corrections without a record.** A requirement marked *Corrected* with no row in `agent-errors.md`.
 11. **Gaps against the manual.** A feature in the one-pager with no tested requirement.
-12. **The trace and handoff checks.** Explain anything they reported, and whether each "By hand" row gives a reason. The handoff check reads columns, not meaning: check that each requirement's source is true (a *Fixed* row really follows a person's decision to fix) and that each person named as deciding is a person, not the agent.
+12. **A test method too vague to write a test from.** A *Fixed* or *Design* requirement's test is due in Execution, so its test method is all Delivery gets. It must say the set-up, what's done at the boundary and what's checked.
+13. **The trace and handoff checks.** Explain anything they reported, and whether each "By hand" row gives a reason. The handoff check reads columns, not meaning: check that each requirement's source is true (a *Fixed* row really follows a person's decision to fix) and that each person named as deciding is a person, not the agent.
 
 ### Stack (the RFC)
 

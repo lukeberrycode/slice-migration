@@ -49,3 +49,20 @@ Against the estimate of 1.75 hours of agent time and 1.25 hours of Luke's. Two a
 | **Version 0.2, total** | 11:57 | | **0.50** (30 minutes: reviewing and merging #2 to #6, and the force push for #5) | **0.19** (about 11.5 minutes of agent activity, from the session log) | Subscription. 38.8k output, 6.04M cache-read, 55.7k cache-write; API-equivalent $2.43 (11:57 to 12:31) |
 
 Against the estimate of 0.5 hours of agent time and 0.33 hours of Luke's. Luke's time came in over the estimate: there were five pull requests, not three, and the rebase of #5 needed a force push, which Claude Code's permission check reserved for him. Agent times per step are from the gaps between responses in the session log, so they're approximate; the total is more reliable than the split.
+
+## Version 0.3: the Discovery handoff
+
+**Estimate, made 6 November 2026 at 16:58, before work started on the tests due in Execution.** Luke's estimate: 15 minutes of agent time and 15 of Luke's with AI, 90 minutes without. Claude's per-step judgement was 12 and 10 minutes.
+
+| Step | What |
+|---|---|
+| Method | Handoff item 3: a requirement from the old slice has its test at the handoff; a fixed or design one has a test method, and its test is written first in Execution |
+| Handoff check | The same rule in `handoff.py`, by source, with tests, README and command |
+| Skills | Discovery's gate step, Planning's vertical slices, and the gate reviewer |
+| **Total** | **15 min agent, 15 min Luke (with AI); 90 min without** |
+
+| | Started | Finished | Luke (h) | Agent (h) | Tokens / cost |
+|---|---|---|---|---|---|
+| Not estimated: the method split (#10) | 29 Oct 2026 | merged 29 Oct | | | |
+| Not estimated: the handoff check | 29 Oct 2026 | 29 Oct 11:38 (commit) | | | |
+| Tests due in Execution | 6 Nov 2026 16:58 | 17:01 (commit) | | about 0.05 | |

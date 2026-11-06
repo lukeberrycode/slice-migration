@@ -103,7 +103,7 @@ Optional `trace` settings in `.claude/slice-migration.json`, with their defaults
 
 1. Users, states and journeys in `users-states-journeys.md`, with a risk for every state.
 2. Every requirement has a state or transition, a test method and a source (*Old slice*, *Fixed* or *Design*), and none is still a *Hypothesis*. A *Fixed* requirement names its keep-or-fix entry. A dropped one has a reason and who decided.
-3. Every requirement has a tagged boundary test or a "By hand" reason, using the trace check's settings. `trace.exempt` doesn't apply here: by the handoff, every requirement has its test, even one that fails until Execution.
+3. Every *Old slice* requirement has a tagged boundary test or a "By hand" reason, using the trace check's settings: the old slice is there to confirm it now. A *Fixed* or *Design* requirement needs only its test method, because nothing can pass its test yet. It's listed as "Tests due in Execution", where its test is written before what it tests. `trace.exempt` doesn't apply here: whether a test is due now depends on the requirement's source, not its ID.
 4. Every non-functional requirement with a measure has a baseline or a target.
 5. Every row of the decision log (`keep-or-fix.md`, and the scope decisions in `requirements.md`) has a decision and who made it.
 6. A person has approved the Discovery gate. `--before-sign-off` skips this, for use before the gate.

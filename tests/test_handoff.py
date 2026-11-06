@@ -136,10 +136,32 @@ class HandoffTest(unittest.TestCase):
         self.assertProblem("ADMIN-9: dropped, but doesn't say who decided.")
 
     # 3. Boundary tests.
+    def test_an_old_slice_requirement_needs_its_test_now(self):
+        self.write("tests/test_boundary.py", 'req("AUTH-2N")\nreq("PERF-1")\n')
+        self.assertProblem("No boundary test (1): AUTH-1.")
+
     def test_trace_exempt_does_not_apply_at_the_handoff(self):
-        self.write(".claude/slice-migration.json", json.dumps({"trace": {"exempt": ["N$"]}}))
+        self.write(".claude/slice-migration.json", json.dumps({"trace": {"exempt": ["-1$"]}}))
+        self.write("tests/test_boundary.py", 'req("AUTH-2N")\nreq("PERF-1")\n')
+        self.assertProblem("No boundary test (1): AUTH-1.")
+
+    def test_a_fixed_requirement_test_is_due_in_execution(self):
         self.write("tests/test_boundary.py", 'req("AUTH-1")\nreq("PERF-1")\n')
-        self.assertProblem("No boundary test (1): AUTH-2N.")
+        result = self.run_handoff()
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertIn("Tests due in Execution (1, fixed or design): AUTH-2N.", result.stdout)
+
+    def test_a_design_requirement_test_is_due_in_execution(self):
+        self.replace("docs/discovery/requirements.md", "`test_register` | Old slice |", "`test_register` | Design |")
+        self.write("tests/test_boundary.py", 'req("PERF-1")\n')
+        result = self.run_handoff()
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertIn("Tests due in Execution (2, fixed or design): AUTH-1, AUTH-2N.", result.stdout)
+
+    def test_a_test_due_in_execution_still_needs_a_test_method(self):
+        self.replace("docs/discovery/requirements.md", "| `test_quantity` | Fixed |", "| | Fixed |")
+        self.write("tests/test_boundary.py", 'req("AUTH-1")\nreq("PERF-1")\n')
+        self.assertProblem("AUTH-2N: no test method.")
 
     def test_a_tag_for_an_unknown_requirement_fails(self):
         self.write("tests/test_boundary.py", TESTS + 'req("AUTH-7")\n')

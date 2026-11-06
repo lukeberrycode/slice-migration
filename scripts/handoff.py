@@ -9,9 +9,11 @@ the handoff names, whatever source the requirements came from:
    method and a source (old slice, fixed or design). None still a hypothesis.
    A fixed requirement names its keep-or-fix entry. Dropped requirements have a
    reason and who decided.
-3. A boundary test for every requirement, by the trace check's tags, or "By
-   hand". Unlike the trace check, `trace.exempt` doesn't apply: at the handoff
-   every requirement has its test, even one that fails until Execution.
+3. A boundary test for every old-slice requirement, by the trace check's tags,
+   or "By hand". A fixed or design requirement has a test method instead, and
+   is listed as having its test due in Execution: nothing can pass it yet.
+   Unlike the trace check, `trace.exempt` doesn't apply: whether a test is due
+   now depends on the requirement's source, not on its ID.
 4. A baseline or target for every non-functional requirement with a measure.
 5. A decision for every row of the decision log, and who made it.
 6. The Discovery gate, approved by a person in the gates file.
@@ -93,6 +95,8 @@ class Handoff:
         self.config = config
         self.trace = trace.settings(project)
         self.dropped = set()
+        self.sources = {}
+        self.due = []
         self.paths = {**DEFAULTS, **config.get("handoff", {})}
 
     def problem(self, text: str):
@@ -190,6 +194,7 @@ class Handoff:
                 if cell(row, "status").lower().startswith("hypothesis"):
                     self.problem(f"{req}: still a hypothesis.")
                 source = cell(row, "source").lower()
+                self.sources[req] = source
                 if "source" in table["header"] and source not in SOURCES:
                     shown = f'"{cell(row, "source")}"' if source else "none"
                     self.problem(f"{req}: source is {shown}, not old slice, fixed or design.")
@@ -214,7 +219,9 @@ class Handoff:
 
     def tests(self, reqs: dict):
         tagged = trace.tags(self.project, self.trace["tests"], self.trace["tag"])
-        untested = sorted(r for r in reqs if r not in tagged and not re.search(r"by hand", reqs[r], re.I))
+        missing = [r for r in sorted(reqs) if r not in tagged and not re.search(r"by hand", reqs[r], re.I)]
+        self.due = [r for r in missing if self.sources.get(r) in ("fixed", "design")]
+        untested = [r for r in missing if r not in self.due]
         if untested:
             self.problem(f"No boundary test ({len(untested)}): {', '.join(untested)}.")
         for req in sorted(r for r in tagged if r not in reqs and r not in self.dropped):
@@ -268,6 +275,8 @@ def main() -> int:
     print(f"{len(reqs)} requirements; {traced} traced to tests.")
     print(f"Replacing an old slice: {'yes' if replacing else 'no'}.")
     print(f"Sign-off: {'approved' if signed else 'waiting on a person'}.")
+    if check.due:
+        print(f"Tests due in Execution ({len(check.due)}, fixed or design): {', '.join(check.due)}.")
     if check.problems:
         print(f"The handoff isn't complete ({len(check.problems)}):")
         for problem in check.problems:
