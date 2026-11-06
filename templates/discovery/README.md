@@ -2,6 +2,8 @@
 
 The first phase of the method (`method.md` in the slice-migration plugin), run on <legacy slice>.
 
+Every document here is Markdown, and every item in it can be linked to: a table row starts with an anchor (`<a id="..."></a>`) named after its ID or its name, and anything else has a heading.
+
 | Question | Answer |
 |---|---|
 | Can we run the old slice locally? | <how to run it; anything that can't be reproduced> |

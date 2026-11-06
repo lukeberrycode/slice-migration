@@ -76,7 +76,7 @@ A path belongs to the first phase that matches it, so `tests/characterisation/` 
 
 ## Trace check
 
-`scripts/trace.py` checks that every requirement has a test and that every test tag names a real requirement. A requirement is a table row in the requirements file whose first cell is an ID, such as `AUTH-1`. A test is traced to it by a tag such as `@pytest.mark.req("AUTH-1")`; the same text works in any language. Rows that say "By hand" count as traced, and are listed separately. It exits 1 if anything is untraced, so it can run in CI:
+`scripts/trace.py` checks that every requirement has a test and that every test tag names a real requirement. A requirement is a table row in the requirements file whose first cell is an ID, such as `CONS_BROWSING_REQ_1` (see [IDs and links](method.md#ids-and-links)). Older IDs such as `AUTH-1` are still recognised here, so existing projects keep this check. A test is traced to it by a tag such as `@pytest.mark.req("CONS_BROWSING_REQ_1")`; the same text works in any language. Rows that say "By hand" count as traced, and are listed separately. It exits 1 if anything is untraced, so it can run in CI:
 
 ```
 python3 path/to/slice-migration/scripts/trace.py .
@@ -95,18 +95,20 @@ Optional `trace` settings in `.claude/slice-migration.json`, with their defaults
 }
 ```
 
-`tag` is a regular expression whose first group holds the IDs. `exempt` lists ID patterns to report but not fail, such as `"N$"` for requirements whose tests come in a later phase.
+`tag` is a regular expression whose first group holds the IDs. `exempt` lists ID patterns to report but not fail, such as `"^CONS_CHECKOUT_"` for requirements whose tests come in a later phase.
 
 ## Handoff check
 
 `scripts/handoff.py` checks that Discovery's output meets [the Discovery handoff](method.md#the-discovery-handoff): what Planning and later phases start from, whether the requirements came from an old slice, a new design or both. It checks:
 
-1. Users, states and journeys in `users-states-journeys.md`, with a risk for every state.
-2. Every requirement has a state or transition, a test method and a source (*Old slice*, *Fixed* or *Design*), and none is still a *Hypothesis*. A *Fixed* requirement names its keep-or-fix entry. A dropped one has a reason and who decided.
+1. Users, states, transitions and journeys in `users-states-journeys.md`, with a risk for every state. (The Mermaid state diagrams are for people, and aren't checked.)
+2. Every requirement links back to a state or transition, and has a test method and a source (*Old slice*, *Fixed* or *Design*), and none is still a *Hypothesis*. A *Fixed* requirement names its keep-or-fix entry. A dropped one has a reason and who decided.
 3. Every *Old slice* requirement has a tagged boundary test or a "By hand" reason, using the trace check's settings: the old slice is there to confirm it now. A *Fixed* or *Design* requirement needs only its test method, because nothing can pass its test yet. It's listed as "Tests due in Execution", where its test is written before what it tests. `trace.exempt` doesn't apply here: whether a test is due now depends on the requirement's source, not its ID.
 4. Every non-functional requirement with a measure has a baseline or a target.
 5. Every row of the decision log (`keep-or-fix.md`, and the scope decisions in `requirements.md`) has a decision and who made it.
 6. A person has approved the Discovery gate. `--before-sign-off` skips this, for use before the gate.
+
+It also checks [IDs and links](method.md#ids-and-links). Every user, state, transition and requirement needs a well-formed, unique ID and an anchor, and must link back to the definitions its ID says it depends on. Every link to an anchor in the users, requirements and decision log files must lead somewhere. Older IDs such as `AUTH-1` don't pass, so an existing project has to move to the new IDs before this check can pass.
 
 When `legacy_path` exists, it's replacing an old slice, so it also checks the replacement inputs: the old slice's architecture, its data inventory, and the characterisation tests. It exits 1 if anything is missing:
 

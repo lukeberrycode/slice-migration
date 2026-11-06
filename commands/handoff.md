@@ -16,7 +16,7 @@ Use `--before-sign-off` while Discovery is still being prepared for its gate: it
 
 Then report what it found, briefly:
 
-- **Problems**, grouped by the handoff's items: users, states and journeys; requirements and their source; boundary tests; baselines and targets; the decision log; the sign-off; and, when there's an old slice to replace, the replacement inputs.
+- **Problems**, grouped by the handoff's items: users, states, transitions and journeys; IDs and links; requirements and their source; boundary tests; baselines and targets; the decision log; the sign-off; and, when there's an old slice to replace, the replacement inputs.
 - **Decisions waiting on a person:** a missing decision, or a decision with no one named as making it. Never fill these in yourself.
 - **Tests due in Execution:** the *Fixed* and *Design* requirements with no test yet. That's expected: Execution writes each one before what it tests. Check that each has a test method concrete enough to write it from.
 - **Replacing an old slice:** yes or no. It decides whether Planning includes data migration, cut-over and decommissioning.

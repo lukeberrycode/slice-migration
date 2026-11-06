@@ -2,8 +2,10 @@
 """Trace check: every requirement has a test, and every test tag names a requirement.
 
 A requirement is a table row in the requirements file whose first cell is an ID
-such as AUTH-1 or MONEY-1N. A test is traced to it by a tag naming the ID, by
-default `req("AUTH-1")` (a pytest marker, or the same text in any language).
+such as CONS_BROWSING_REQ_1 (see "IDs and links" in method.md), with or without
+its anchor. Older projects' IDs, such as AUTH-1 or MONEY-1N, are recognised too.
+A test is traced to it by a tag naming the ID, by default
+`req("CONS_BROWSING_REQ_1")` (a pytest marker, or the same text in any language).
 
 Rows that say "By hand" count as traced (checked by a person, with the reason in
 the row) and are listed separately. IDs matching a pattern in `trace.exempt` in
@@ -26,7 +28,14 @@ DEFAULTS = {
     "tag": r"""req\(([^)]*)\)""",
     "exempt": [],
 }
-ID = re.compile(r"[A-Z][A-Z0-9]*-\d+[A-Z]*")
+USER = r"[A-Z]{3,6}(?:_\d+)?"
+NAME = r"[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)*"
+INDEX = r"(?:_\d+)?"
+STATE = rf"{USER}_{NAME}{INDEX}"
+REQUIREMENT = rf"{STATE}(?:_TO_{NAME}{INDEX}{INDEX})?_REQ{INDEX}"
+OLD_ID = r"[A-Z][A-Z0-9]*-\d+[A-Z]*"  # Also the form of decision log entries, such as KF-1.
+ID = re.compile(rf"(?<![\w-])(?:{REQUIREMENT}|{OLD_ID})(?![\w-])")
+ANCHOR = re.compile(r"<a\s[^>]*>\s*</a>")
 SKIP_DIRS = {".git", "__pycache__", "node_modules", ".venv", "venv", "build", "dist"}
 
 
@@ -37,6 +46,11 @@ def settings(project: Path) -> dict:
     return {**DEFAULTS, **config}
 
 
+def plain(text: str) -> str:
+    """A table cell without its anchor or Markdown emphasis."""
+    return ANCHOR.sub("", text).strip("*` ")
+
+
 def requirements(path: Path) -> dict:
     """ID -> the row's text, from every Markdown table in the file."""
     found = {}
@@ -44,7 +58,7 @@ def requirements(path: Path) -> dict:
         if not line.lstrip().startswith("|"):
             continue
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        first = cells[0].strip("*` ")
+        first = plain(cells[0])
         if ID.fullmatch(first) and first not in found:
             found[first] = line
     return found
