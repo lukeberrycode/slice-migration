@@ -108,7 +108,7 @@ Optional `trace` settings in `.claude/slice-migration.json`, with their defaults
 5. Every row of the decision log (`keep-or-fix.md`, and the scope decisions in `requirements.md`) has a decision and who made it.
 6. A person has approved the Discovery gate. `--before-sign-off` skips this, for use before the gate.
 
-It also checks [IDs and links](method.md#ids-and-links). Every user, state, transition and requirement needs a well-formed, unique ID and an anchor, and must link back to the definitions its ID says it depends on. Every link to an anchor in the users, requirements and decision log files must lead somewhere. Older IDs such as `AUTH-1` don't pass, so an existing project has to move to the new IDs before this check can pass.
+It also checks [IDs and links](method.md#ids-and-links). Every user, state, transition and requirement needs a well-formed, unique ID and an anchor, and must link back to the definitions its ID says it depends on. Every link to an anchor or a heading in the users, requirements and decision log files must lead somewhere. A heading is reached by its generated anchor (`## Quote latency` by `#quote-latency`), but a definition needs its own anchor even if it also has a heading. Older IDs such as `AUTH-1` don't pass, so an existing project has to move to the new IDs before this check can pass.
 
 When `legacy_path` exists, it's replacing an old slice, so it also checks the replacement inputs: the old slice's architecture, its data inventory, and the characterisation tests. It exits 1 if anything is missing:
 

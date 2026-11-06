@@ -67,3 +67,11 @@ Against the estimate of 0.5 hours of agent time and 0.33 hours of Luke's. Luke's
 | Not estimated: the handoff check | 29 Oct 2026 | 29 Oct 11:38 (commit) | | | |
 | Tests due in Execution | 6 Nov 2026 16:58 | 17:01 (commit) | | about 0.05 | |
 | IDs and links | 6 Nov 2026 | 6 Nov 2026 (pull request) | | | Subscription. 53.3k output, 1.63M cache-read, 122.6k cache-write; API-equivalent $2.37 (the session up to the decision on estimates) |
+
+## Discovery from a new design
+
+One row per step of [the plan](plans/discovery-from-a-new-design.md). Token figures are from the Claude Code session log, priced as above. Each covers the session up to the moment its row was written, so it leaves out the last few responses of that session.
+
+| Step | Date | Tokens / cost |
+|---|---|---|
+| 0. Links to headings | 6 Nov 2026 | Subscription. 11.6k output, 476k cache-read, 36.3k cache-write; API-equivalent $0.62 |

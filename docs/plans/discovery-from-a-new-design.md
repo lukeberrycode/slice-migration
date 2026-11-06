@@ -1,6 +1,6 @@
 # Plan: Discovery from a new design
 
-**Status:** proposed, 6 November 2026. Not started.
+**Status:** proposed, 6 November 2026. Step 0 done; step 1 is next.
 
 ## The task
 
