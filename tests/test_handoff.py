@@ -9,6 +9,7 @@ import unittest
 from pathlib import Path
 
 HANDOFF = Path(__file__).resolve().parent.parent / "scripts" / "handoff.py"
+TEMPLATES = Path(__file__).resolve().parent.parent / "templates" / "discovery"
 
 USERS = """# Users, states and journeys
 
@@ -395,14 +396,81 @@ class HandoffTest(unittest.TestCase):
         (self.project / "docs/discovery/requirements.md").unlink()
         self.assertEqual(self.run_handoff().returncode, 2)
 
-    def test_the_templates_have_the_columns_the_handoff_needs(self):
-        templates = Path(__file__).resolve().parent.parent / "templates" / "discovery"
-        result = self.run_handoff()  # Sanity: the fixture passes before the templates replace it.
-        self.assertEqual(result.returncode, 0)
-        for name in ("requirements.md", "keep-or-fix.md", "users-states-journeys.md"):
-            shutil.copy(templates / name, self.project / "docs" / "discovery" / name)
-        out = self.run_handoff().stdout
-        self.assertNotIn("column", out)
+    # The templates, flattened into docs/discovery as migrate-init does.
+    def use_templates(self, source):
+        discovery = self.project / "docs" / "discovery"
+        shutil.rmtree(discovery)
+        discovery.mkdir()
+        for folder in (TEMPLATES, TEMPLATES / source):
+            for template in folder.glob("*.md"):
+                self.assertFalse((discovery / template.name).exists(), f"{template.name} is in both folders")
+                shutil.copy(template, discovery)
+
+    def add_row(self, rel, header, row):
+        """Add a row under the table whose header starts with the given text."""
+        lines = (self.project / rel).read_text().splitlines()
+        at = next(i for i, line in enumerate(lines) if line.startswith(header))
+        lines.insert(at + 2, row)
+        self.write(rel, "\n".join(lines) + "\n")
+
+    def test_each_source_has_its_own_templates(self):
+        names = lambda folder: {f.name for f in folder.glob("*.md")}
+        self.assertEqual(names(TEMPLATES), {"README.md", "requirements.md", "users-states-journeys.md"})
+        self.assertEqual(names(TEMPLATES / "legacy"), {"one-pager.md", "architecture.md", "data-inventory.md", "keep-or-fix.md", "agent-errors.md"})
+        self.assertEqual(names(TEMPLATES / "design"), {"one-pager.md", "constraints.md", "assumptions.md"})
+
+    def test_the_shared_templates_suit_either_source(self):
+        for name in ("README.md", "requirements.md", "users-states-journeys.md"):
+            self.assertNotIn("egacy slice", (TEMPLATES / name).read_text(), name)
+        requirements = (TEMPLATES / "requirements.md").read_text()
+        self.assertIn("characterisation test against the running old slice", requirements)
+        self.assertIn("people it's for confirm it", requirements)
+        readme = (TEMPLATES / "README.md").read_text()
+        self.assertIn("### Checklist: from the old slice", readme)
+        self.assertIn("### Checklist: from a new design", readme)
+
+    def test_the_old_slice_templates_have_what_the_handoff_needs(self):
+        self.use_templates("legacy")
+        self.write(".claude/slice-migration.json", json.dumps({"legacy_path": "legacy"}))
+        self.write("legacy/Main.java", "public class Main {}\n")
+        out = self.run_handoff("--before-sign-off").stdout
+        self.assertIn("Replacing an old slice: yes.", out)
+        for problem in ("column", "is missing", "No decision log", "goes nowhere"):
+            self.assertNotIn(problem, out)
+
+    def use_design_templates(self):
+        self.use_templates("design")
+        self.write(".claude/slice-migration.json", json.dumps({"legacy_path": "", "handoff": {"decisions": ["docs/discovery/assumptions.md"]}}))
+        self.write("tests/test_boundary.py", "")
+
+    def test_the_design_templates_have_what_the_handoff_needs(self):
+        self.use_design_templates()
+        out = self.run_handoff("--before-sign-off").stdout
+        self.assertIn("Replacing an old slice: no.", out)
+        for problem in ("column", "is missing", "No decision log", "goes nowhere"):
+            self.assertNotIn(problem, out)
+
+    def fill_design_templates(self):
+        self.use_design_templates()
+        users = [line for line in USERS.splitlines() if line.startswith("| <a id=") or line.startswith("| Log in and out")]
+        for header, rows in (("| ID | User |", users[:1]), ("| ID | State |", users[1:3]), ("| ID | Transition |", users[3:5]), ("| Journey |", users[5:])):
+            for row in rows:
+                self.add_row(USERS_FILE, header, row)
+        self.add_row(REQUIREMENTS_FILE, "| ID | State or transition | Requirement | Test |", '| <a id="TRAD_OUT_TO_IN_REQ_1"></a>TRAD_OUT_TO_IN_REQ_1 | [TRAD_OUT_TO_IN](users-states-journeys.md#TRAD_OUT_TO_IN) | Logging in shows the market | Logged out, log in, check the market shows | Design | Confirmed, rests on [AS-1](assumptions.md#AS-1) | Trader walkthrough, Sam, 12 Nov |')
+        self.add_row(REQUIREMENTS_FILE, "| ID | State or transition | Requirement | Measure |", '| <a id="TRAD_IN_REQ_1"></a>TRAD_IN_REQ_1 | [TRAD_IN](users-states-journeys.md#TRAD_IN) | Quotes are fast | p95 latency | 40 ms, from [Quote latency](constraints.md#quote-latency) | Design | Confirmed | Trader walkthrough, Sam, 12 Nov |')
+        self.add_row("docs/discovery/constraints.md", "| Limit |", '| <a id="quote-latency"></a>Quote latency | Performance | 40 ms | Sam | Traders act on quotes at once |')
+        self.add_row("docs/discovery/assumptions.md", "| ID |", '| <a id="AS-1"></a>AS-1 | One account per trader | Merging accounts later | One | One | Simplest for the first users | Sam |')
+
+    def test_filled_design_templates_pass_the_handoff(self):
+        self.fill_design_templates()
+        result = self.run_handoff("--before-sign-off")
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertIn("Tests due in Execution (2, fixed or design): TRAD_IN_REQ_1, TRAD_OUT_TO_IN_REQ_1.", result.stdout)
+
+    def test_an_undecided_assumption_fails_the_handoff(self):
+        self.fill_design_templates()
+        self.replace("docs/discovery/assumptions.md", "| One | One | Simplest for the first users | Sam |", "| One | | | |")
+        self.assertProblem("assumptions.md: AS-1 has no decision.", "--before-sign-off")
 
 
 if __name__ == "__main__":
