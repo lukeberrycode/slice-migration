@@ -28,12 +28,10 @@ REQUIREMENTS = """# Requirements
 class TraceTest(unittest.TestCase):
     def setUp(self):
         self.project = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.project)
         (self.project / "docs" / "discovery").mkdir(parents=True)
         (self.project / "docs" / "discovery" / "requirements.md").write_text(REQUIREMENTS)
         (self.project / "tests").mkdir()
-
-    def tearDown(self):
-        shutil.rmtree(self.project)
 
     def write_test(self, name, text):
         (self.project / "tests" / name).write_text(text)

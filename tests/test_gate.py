@@ -16,12 +16,10 @@ CONFIG = ROOT / "templates" / "config.json"
 class GateHookTest(unittest.TestCase):
     def setUp(self):
         self.project = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.project)
         (self.project / ".claude").mkdir()
         shutil.copy(CONFIG, self.project / ".claude" / "slice-migration.json")
         (self.project / "docs").mkdir()
-
-    def tearDown(self):
-        shutil.rmtree(self.project)
 
     def approve(self, *phases):
         gates = {p: {"approved_by": "A person", "date": "2026-10-25"} for p in phases}
