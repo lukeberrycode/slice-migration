@@ -1,6 +1,6 @@
 # Timings
 
-Each piece of work is estimated before it starts, and the actual time is recorded when it ends. The same approach as `daytrader-to-python` (its `docs/timings.md` and `docs/estimation.md`).
+The cost of each step is recorded in tokens, from the Claude Code session log. Since 6 November 2026, Luke doesn't provide time estimates for work on this plugin, with or without AI. Earlier estimates below are kept as a record.
 
 ## Version 0.1: the minimal working subset
 
@@ -66,3 +66,4 @@ Against the estimate of 0.5 hours of agent time and 0.33 hours of Luke's. Luke's
 | Not estimated: the method split (#10) | 29 Oct 2026 | merged 29 Oct | | | |
 | Not estimated: the handoff check | 29 Oct 2026 | 29 Oct 11:38 (commit) | | | |
 | Tests due in Execution | 6 Nov 2026 16:58 | 17:01 (commit) | | about 0.05 | |
+| IDs and links | 6 Nov 2026 | 6 Nov 2026 (pull request) | | | Subscription. 53.3k output, 1.63M cache-read, 122.6k cache-write; API-equivalent $2.37 (the session up to the decision on estimates) |

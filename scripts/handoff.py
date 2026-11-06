@@ -4,7 +4,7 @@
 Delivery starts from the handoff and from nothing else, so this checks only what
 the handoff names, whatever source the requirements came from:
 
-1. Users, states and journeys, with a risk for every state.
+1. Users, states, transitions and journeys, with a risk for every state.
 2. Requirements, each with an ID, a state or transition, the requirement, a test
    method and a source (old slice, fixed or design). None still a hypothesis.
    A fixed requirement names its keep-or-fix entry. Dropped requirements have a
@@ -17,6 +17,12 @@ the handoff names, whatever source the requirements came from:
 4. A baseline or target for every non-functional requirement with a measure.
 5. A decision for every row of the decision log, and who made it.
 6. The Discovery gate, approved by a person in the gates file.
+
+It also checks "IDs and links" in method.md, on which review of the above relies:
+every user, state, transition and requirement has a well-formed, unique ID and an
+anchor, and links back to the definitions it depends on, and every link in these
+files leads somewhere. Older IDs such as AUTH-1 don't pass here, though the trace
+check still reads them.
 
 When there's an old slice to replace (`legacy_path` exists), it also checks the
 replacement inputs: the architecture, the data inventory and the
@@ -31,6 +37,7 @@ import importlib.util
 import json
 import re
 import sys
+from collections import Counter
 from pathlib import Path
 
 # Load the trace check by path: a plain `import trace` would find the standard library's.
@@ -48,6 +55,50 @@ DEFAULTS = {
 }
 SOURCES = {"old slice", "fixed", "design"}
 EMPTY = {"", "-", "–", "—", "tbd", "todo", "?"}
+
+USER_ID = re.compile(trace.USER)
+STATE_ID = re.compile(rf"({trace.USER})_({trace.NAME}{trace.INDEX})")
+TO_STATE = re.compile(rf"{trace.NAME}{trace.INDEX}{trace.INDEX}")
+REQUIREMENT_ID = re.compile(rf"(.+)_REQ{trace.INDEX}")
+RESERVED = {"TO", "REQ"}  # Mark the parts of an ID, so they can't be a whole state name.
+INLINE_CODE = re.compile(r"`[^`]*`")
+LINK = re.compile(r"\[[^\]]*\]\(([^)#\s]*)#([^)\s]+)\)")
+ANCHOR_ID = re.compile(r'<a\s+id="([^"]+)"\s*>\s*</a>')
+
+
+def valid_state(text: str) -> bool:
+    return bool(STATE_ID.fullmatch(text)) and not RESERVED & set(text.split("_"))
+
+
+def valid_transition(text: str) -> bool:
+    parts = text.split("_TO_")
+    return (
+        len(parts) == 2
+        and valid_state(parts[0])
+        and bool(TO_STATE.fullmatch(parts[1]))
+        and not RESERVED & set(parts[1].split("_"))
+    )
+
+
+def valid_requirement(text: str) -> bool:
+    match = REQUIREMENT_ID.fullmatch(text)
+    return bool(match) and (valid_state(match[1]) or valid_transition(match[1]))
+
+
+def visible(path: Path) -> str:
+    """The file's text, without code: an example of a link or anchor isn't one."""
+    lines, fenced = [], False
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.lstrip().startswith("```"):
+            fenced = not fenced
+        elif not fenced:
+            lines.append(INLINE_CODE.sub("", line))
+    return "\n".join(lines)
+
+
+def linked(text: str) -> list:
+    """The IDs that a table cell links to."""
+    return [fragment for _, fragment in LINK.findall(text)]
 
 
 def tables(path: Path) -> list:
@@ -73,7 +124,7 @@ def cell(row: dict, *names) -> str:
     """The first of the named columns the row has, stripped of Markdown emphasis."""
     for name in names:
         if name in row:
-            return row[name].strip("*_` ")
+            return trace.plain(row[name]).strip("*_` ")
     return ""
 
 
@@ -98,6 +149,8 @@ class Handoff:
         self.sources = {}
         self.due = []
         self.paths = {**DEFAULTS, **config.get("handoff", {})}
+        self.user_rows, self.state_rows, self.transition_rows = [], [], []
+        self.requirement_rows, self.dropped_rows = [], []
 
     def problem(self, text: str):
         self.problems.append(text)
@@ -115,14 +168,20 @@ class Handoff:
         if found is None:
             return
         rel = self.paths["users"]
-        users = [t for t in found if has(t, "user")]
-        states = [t for t in found if has(t, "state") and not has(t, "user")]
+        users = [t for t in found if has(t, "user") and not any(c in t["header"] for c in ("state", "transition", "journey"))]
+        states = [t for t in found if has(t, "state")]
+        transitions = [t for t in found if has(t, "transition")]
         journeys = [t for t in found if has(t, "journey")]
+        self.user_rows = [r for t in users for r in t["rows"]]
+        self.transition_rows = [r for t in transitions for r in t["rows"]]
         if not any(t["rows"] for t in users):
             self.problem(f"{rel}: no users.")
+        if not self.transition_rows:
+            self.problem(f"{rel}: no transitions.")
         if not any(t["rows"] for t in journeys):
             self.problem(f"{rel}: no journeys.")
         rows = [r for t in states for r in t["rows"]]
+        self.state_rows = rows
         if not rows:
             self.problem(f"{rel}: no states.")
         if states and not all(has(t, "risk") for t in states):
@@ -167,8 +226,8 @@ class Handoff:
         if not any(t["rows"] for t in functional):
             self.problem(f"{rel}: no requirements.")
 
-        for table, needed in [(t, ["state or transition", "source"]) for t in functional] + [
-            (t, ["source"]) for t in nonfunctional
+        for table, needed in [(t, ["state or transition", "source"]) for t in functional + nonfunctional] + [
+            (t, ["state or transition"]) for t in dropped
         ]:
             missing = [c for c in needed if c not in table["header"]]
             if missing:
@@ -181,7 +240,8 @@ class Handoff:
         for table in functional + nonfunctional:
             for row in table["rows"]:
                 req = cell(row, "id")
-                if not ID.fullmatch(req):
+                self.requirement_rows.append(row)
+                if not req:
                     continue
                 text = " | ".join(row.values())
                 reqs[req] = text
@@ -207,7 +267,8 @@ class Handoff:
         for table in dropped:
             for row in table["rows"]:
                 req = cell(row, "id")
-                if not ID.fullmatch(req):
+                self.dropped_rows.append(row)
+                if not req:
                     continue
                 reqs.pop(req, None)
                 self.dropped.add(req)
@@ -216,6 +277,98 @@ class Handoff:
                 if not filled(cell(row, "decided by")):
                     self.problem(f"{req}: dropped, but doesn't say who decided.")
         return reqs
+
+    def identified(self, row: dict, kind: str, valid, form: str) -> str:
+        """The row's ID, or "" (and a problem) if it can't be checked any further."""
+        found = cell(row, "id")
+        if not found:
+            self.problem(f"A {kind} has no ID: {cell(row, kind, 'requirement') or 'an empty row'}.")
+            return ""
+        if not valid(found):
+            self.problem(f"{found}: not a valid {kind} ID. The form is {form}, with an optional index.")
+            return ""
+        if found not in ANCHOR_ID.findall(row["id"]):
+            self.problem(f"{found}: no anchor for links to reach it.")
+        return found
+
+    def parent(self, row: dict, found: str, column: str, what: str) -> str:
+        """The one ID this row's column links back to, or "" (and a problem)."""
+        targets = linked(row.get(column, ""))
+        if len(targets) != 1:
+            self.problem(f"{found}: needs one link back to {what}, and has {len(targets)}.")
+            return ""
+        return targets[0]
+
+    def definitions(self):
+        """Every definition has a good ID and an anchor, and links back to what it depends on."""
+        users, states, transitions = set(), set(), set()
+        for rows, kind, valid, form, seen in (
+            (self.user_rows, "user", USER_ID.fullmatch, "USER", users),
+            (self.state_rows, "state", valid_state, "USER_STATE", states),
+            (self.transition_rows, "transition", valid_transition, "USER_STATE1_TO_STATE2", transitions),
+        ):
+            for row in rows:
+                found = self.identified(row, kind, valid, form)
+                if found:
+                    seen.add(found)
+        for row in self.state_rows:
+            found = cell(row, "id")
+            if found in states:
+                user = STATE_ID.fullmatch(found)[1]
+                target = self.parent(row, found, "user", "its user")
+                if target and target != user:
+                    self.problem(f"{found}: links back to {target}, but its ID says {user}.")
+                elif target and target not in users:
+                    self.problem(f"{found}: its user {target} isn't in the users table.")
+        for row in self.transition_rows:
+            found = cell(row, "id")
+            if found in transitions:
+                self.transition_parents(row, found, states)
+        for row in self.requirement_rows + self.dropped_rows:
+            found = self.identified(row, "requirement", valid_requirement, "USER_STATE_REQ or USER_STATE1_TO_STATE2_REQ")
+            if not found:
+                continue
+            expected = REQUIREMENT_ID.fullmatch(found)[1]
+            target = self.parent(row, found, "state or transition", "its state or transition")
+            if target and target != expected:
+                self.problem(f"{found}: links back to {target}, but its ID says {expected}.")
+            elif target and target not in states | transitions:
+                self.problem(f"{found}: {target} isn't in the states or transitions tables.")
+
+        defined = [cell(r, "id") for r in self.user_rows + self.state_rows + self.transition_rows + self.requirement_rows]
+        for rows in (defined, [cell(r, "id") for r in self.dropped_rows]):
+            for found, count in Counter(rows).items():
+                if found and count > 1:
+                    self.problem(f"{found}: used as an ID {count} times.")
+
+    def transition_parents(self, row: dict, found: str, states: set):
+        left, right = found.split("_TO_")
+        user = STATE_ID.fullmatch(left)[1]
+        source = self.parent(row, found, "from", "the state it leaves")
+        target = self.parent(row, found, "to", "the state it enters")
+        if source and source != left:
+            self.problem(f"{found}: links back to {source} as the state it leaves, but its ID says {left}.")
+        # The ID's second state may be followed by the transition's own index.
+        entered = {f"{user}_{right}", f"{user}_{re.sub(r'_[0-9]+$', '', right)}"}
+        if target and target not in entered:
+            self.problem(f"{found}: links back to {target} as the state it enters, which doesn't match its ID.")
+        for state in (source, target):
+            if state and state not in states:
+                self.problem(f"{found}: {state} isn't in the states table.")
+
+    def links(self):
+        """Every link to an anchor, in the files that hold the definitions, leads somewhere."""
+        files = [self.paths["users"], self.trace["requirements"], *self.paths["decisions"]]
+        for rel in files:
+            path = self.project / rel
+            if not path.is_file():
+                continue
+            for file, fragment in LINK.findall(visible(path)):
+                if "://" in file:
+                    continue
+                target = (path.parent / file) if file else path
+                if not target.is_file() or fragment not in ANCHOR_ID.findall(visible(target)):
+                    self.problem(f"{rel}: the link to {file}#{fragment} goes nowhere.")
 
     def tests(self, reqs: dict):
         tagged = trace.tags(self.project, self.trace["tests"], self.trace["tag"])
@@ -263,6 +416,8 @@ def main() -> int:
         print(f"Can't read the config or the requirements: {e}", file=sys.stderr)
         return 2
     check.users()
+    check.definitions()
+    check.links()
     tagged = check.tests(reqs)
     replacing = check.replacing()
     if replacing:

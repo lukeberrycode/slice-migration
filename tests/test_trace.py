@@ -78,6 +78,21 @@ class TraceTest(unittest.TestCase):
         result = self.run_trace()
         self.assertEqual(result.returncode, 0, result.stdout)
 
+    def test_new_style_ids_are_read_through_their_anchors(self):
+        (self.project / "docs" / "discovery" / "requirements.md").write_text(
+            "| ID | Requirement | Test | Status |\n|---|---|---|---|\n"
+            '| <a id="CONS_READY-TO-SHIP_REQ_1"></a>CONS_READY-TO-SHIP_REQ_1 | Ready | `t` | Confirmed |\n'
+            '| <a id="CONS_BROWSING_TO_CHECKOUT_REQ"></a>**CONS_BROWSING_TO_CHECKOUT_REQ** | Pay | `t` | Confirmed |\n'
+            '| <a id="CONS_BROWSING_2_TO_CHECKOUT_1_2_REQ_3"></a>CONS_BROWSING_2_TO_CHECKOUT_1_2_REQ_3 | Pay | `t` | Confirmed |\n'
+        )
+        self.write_test(
+            "test_new.py",
+            'req("CONS_READY-TO-SHIP_REQ_1", "CONS_BROWSING_TO_CHECKOUT_REQ")\nreq("CONS_BROWSING_2_TO_CHECKOUT_1_2_REQ_3")\n',
+        )
+        result = self.run_trace()
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertIn("3 requirements", result.stdout)
+
     def test_a_missing_requirements_file_is_an_error(self):
         (self.project / "docs" / "discovery" / "requirements.md").unlink()
         self.assertEqual(self.run_trace().returncode, 2)

@@ -12,18 +12,23 @@ HANDOFF = Path(__file__).resolve().parent.parent / "scripts" / "handoff.py"
 
 USERS = """# Users, states and journeys
 
-| User | How they use it | Priority |
-|---|---|---|
-| Trader | Buys and sells | 1 |
-
-| ID | State | Entered by | Risk |
+| ID | User | How they use it | Priority |
 |---|---|---|---|
-| S1 | Logged in | Logging in | High |
-| S2 | Logged out | Logging out | Low |
+| <a id="TRAD"></a>TRAD | Trader | Buys and sells | 1 |
 
-| Journey | States, in order | Requirements on the transitions |
+| ID | State | User | Entered by | Risk |
+|---|---|---|---|---|
+| <a id="TRAD_IN"></a>TRAD_IN | Logged in | [TRAD](#TRAD) | Logging in | High |
+| <a id="TRAD_OUT"></a>TRAD_OUT | Logged out | [TRAD](#TRAD) | Logging out | Low |
+
+| ID | Transition | From | To |
+|---|---|---|---|
+| <a id="TRAD_OUT_TO_IN"></a>TRAD_OUT_TO_IN | Log in | [TRAD_OUT](#TRAD_OUT) | [TRAD_IN](#TRAD_IN) |
+| <a id="TRAD_IN_TO_OUT"></a>TRAD_IN_TO_OUT | Log out | [TRAD_IN](#TRAD_IN) | [TRAD_OUT](#TRAD_OUT) |
+
+| Journey | User | Transitions, in order |
 |---|---|---|
-| Log in and out | S2, S1, S2 | AUTH-1 |
+| Log in and out | [TRAD](#TRAD) | [TRAD_OUT_TO_IN](#TRAD_OUT_TO_IN), [TRAD_IN_TO_OUT](#TRAD_IN_TO_OUT) |
 """
 
 REQUIREMENTS = """# Requirements
@@ -34,27 +39,30 @@ REQUIREMENTS = """# Requirements
 
 | ID | State or transition | Requirement | Test | Source | Status |
 |---|---|---|---|---|---|
-| AUTH-1 | S2 to S1 | Registering logs the user in | `test_register` | Old slice | Confirmed |
-| AUTH-2N | S1 | Quantities are whole numbers | `test_quantity` | Fixed | Confirmed, see KF-1 |
-| ADMIN-4 | S1 | Rebuilding the database destroys all data | checked | Old slice | By hand: it destroys the data other tests use |
+| <a id="TRAD_OUT_TO_IN_REQ_1"></a>TRAD_OUT_TO_IN_REQ_1 | [TRAD_OUT_TO_IN](users-states-journeys.md#TRAD_OUT_TO_IN) | Registering logs the user in | `test_register` | Old slice | Confirmed |
+| <a id="TRAD_IN_REQ_1"></a>TRAD_IN_REQ_1 | [TRAD_IN](users-states-journeys.md#TRAD_IN) | Quantities are whole numbers | `test_quantity` | Fixed | Confirmed, see [KF-1](keep-or-fix.md#KF-1) |
+| <a id="TRAD_IN_REQ_2"></a>TRAD_IN_REQ_2 | [TRAD_IN](users-states-journeys.md#TRAD_IN) | Rebuilding the database destroys all data | checked | Old slice | By hand: it destroys the data other tests use |
 
-| ID | Requirement | Measure | Baseline or target | Source | Status |
-|---|---|---|---|---|---|
-| PERF-1 | Quotes are fast | p95 latency | 40 ms | Old slice | Confirmed |
+| ID | State or transition | Requirement | Measure | Baseline or target | Source | Status |
+|---|---|---|---|---|---|---|
+| <a id="TRAD_IN_REQ_3"></a>TRAD_IN_REQ_3 | [TRAD_IN](users-states-journeys.md#TRAD_IN) | Quotes are fast | p95 latency | 40 ms | Old slice | Confirmed |
 
-| ID | Requirement | Reason | Decided by |
-|---|---|---|---|
-| ADMIN-9 | Admin can reset the market | Out of scope | Luke |
+| ID | State or transition | Requirement | Reason | Decided by |
+|---|---|---|---|---|
+| <a id="TRAD_IN_REQ_4"></a>TRAD_IN_REQ_4 | [TRAD_IN](users-states-journeys.md#TRAD_IN) | Admin can reset the market | Out of scope | Luke |
 """
 
 DECISIONS = """# Keep or fix
 
 | ID | Behaviour | Evidence | Who depends on it | Suggestion | Decision | Decided by |
 |---|---|---|---|---|---|---|
-| KF-1 | Fractional quantities accepted | test_quantity | Nobody | Fix | Fix | Luke |
+| <a id="KF-1"></a>KF-1 | Fractional quantities accepted | test_quantity | Nobody | Fix | Fix | Luke |
 """
 
-TESTS = 'req("AUTH-1")\nreq("AUTH-2N")\nreq("PERF-1")\nreq("ADMIN-9")\n'
+TESTS = 'req("TRAD_OUT_TO_IN_REQ_1")\nreq("TRAD_IN_REQ_1")\nreq("TRAD_IN_REQ_3")\nreq("TRAD_IN_REQ_4")\n'
+
+USERS_FILE = "docs/discovery/users-states-journeys.md"
+REQUIREMENTS_FILE = "docs/discovery/requirements.md"
 
 
 class HandoffTest(unittest.TestCase):
@@ -104,10 +112,10 @@ class HandoffTest(unittest.TestCase):
     # 1. Users, states and journeys.
     def test_a_state_with_no_risk_fails(self):
         self.replace("docs/discovery/users-states-journeys.md", "| Logging out | Low |", "| Logging out | |")
-        self.assertProblem("states with no risk: S2.")
+        self.assertProblem("states with no risk: TRAD_OUT.")
 
     def test_no_journeys_fails(self):
-        self.replace("docs/discovery/users-states-journeys.md", "| Log in and out | S2, S1, S2 | AUTH-1 |\n", "")
+        self.replace(USERS_FILE, "| Log in and out | [TRAD](#TRAD) | [TRAD_OUT_TO_IN](#TRAD_OUT_TO_IN), [TRAD_IN_TO_OUT](#TRAD_IN_TO_OUT) |\n", "")
         self.assertProblem("no journeys.")
 
     def test_a_missing_users_file_fails(self):
@@ -117,60 +125,60 @@ class HandoffTest(unittest.TestCase):
     # 2. Requirements.
     def test_a_requirement_with_no_source_fails(self):
         self.replace("docs/discovery/requirements.md", "`test_register` | Old slice |", "`test_register` | |")
-        self.assertProblem("AUTH-1: source is none, not old slice, fixed or design.")
+        self.assertProblem("TRAD_OUT_TO_IN_REQ_1: source is none, not old slice, fixed or design.")
 
     def test_a_table_with_no_source_column_fails(self):
         self.replace("docs/discovery/requirements.md", "| Test | Source | Status |", "| Test | Origin | Status |")
         self.assertProblem("a requirements table has no source column.")
 
     def test_a_hypothesis_fails(self):
-        self.replace("docs/discovery/requirements.md", "| Old slice | Confirmed |\n| AUTH-2N", "| Old slice | Hypothesis |\n| AUTH-2N")
-        self.assertProblem("AUTH-1: still a hypothesis.")
+        self.replace("docs/discovery/requirements.md", "`test_register` | Old slice | Confirmed |", "`test_register` | Old slice | Hypothesis |")
+        self.assertProblem("TRAD_OUT_TO_IN_REQ_1: still a hypothesis.")
 
     def test_a_fixed_requirement_must_name_its_decision(self):
-        self.replace("docs/discovery/requirements.md", "Confirmed, see KF-1", "Confirmed")
-        self.assertProblem("AUTH-2N: fixed, but names no entry in the decision log.")
+        self.replace("docs/discovery/requirements.md", "Confirmed, see [KF-1](keep-or-fix.md#KF-1)", "Confirmed")
+        self.assertProblem("TRAD_IN_REQ_1: fixed, but names no entry in the decision log.")
 
     def test_a_dropped_requirement_needs_who_decided(self):
         self.replace("docs/discovery/requirements.md", "| Out of scope | Luke |", "| Out of scope | |")
-        self.assertProblem("ADMIN-9: dropped, but doesn't say who decided.")
+        self.assertProblem("TRAD_IN_REQ_4: dropped, but doesn't say who decided.")
 
     # 3. Boundary tests.
     def test_an_old_slice_requirement_needs_its_test_now(self):
-        self.write("tests/test_boundary.py", 'req("AUTH-2N")\nreq("PERF-1")\n')
-        self.assertProblem("No boundary test (1): AUTH-1.")
+        self.write("tests/test_boundary.py", 'req("TRAD_IN_REQ_1")\nreq("TRAD_IN_REQ_3")\n')
+        self.assertProblem("No boundary test (1): TRAD_OUT_TO_IN_REQ_1.")
 
     def test_trace_exempt_does_not_apply_at_the_handoff(self):
-        self.write(".claude/slice-migration.json", json.dumps({"trace": {"exempt": ["-1$"]}}))
-        self.write("tests/test_boundary.py", 'req("AUTH-2N")\nreq("PERF-1")\n')
-        self.assertProblem("No boundary test (1): AUTH-1.")
+        self.write(".claude/slice-migration.json", json.dumps({"trace": {"exempt": ["_REQ_1$"]}}))
+        self.write("tests/test_boundary.py", 'req("TRAD_IN_REQ_1")\nreq("TRAD_IN_REQ_3")\n')
+        self.assertProblem("No boundary test (1): TRAD_OUT_TO_IN_REQ_1.")
 
     def test_a_fixed_requirement_test_is_due_in_execution(self):
-        self.write("tests/test_boundary.py", 'req("AUTH-1")\nreq("PERF-1")\n')
+        self.write("tests/test_boundary.py", 'req("TRAD_OUT_TO_IN_REQ_1")\nreq("TRAD_IN_REQ_3")\n')
         result = self.run_handoff()
         self.assertEqual(result.returncode, 0, result.stdout)
-        self.assertIn("Tests due in Execution (1, fixed or design): AUTH-2N.", result.stdout)
+        self.assertIn("Tests due in Execution (1, fixed or design): TRAD_IN_REQ_1.", result.stdout)
 
     def test_a_design_requirement_test_is_due_in_execution(self):
         self.replace("docs/discovery/requirements.md", "`test_register` | Old slice |", "`test_register` | Design |")
-        self.write("tests/test_boundary.py", 'req("PERF-1")\n')
+        self.write("tests/test_boundary.py", 'req("TRAD_IN_REQ_3")\n')
         result = self.run_handoff()
         self.assertEqual(result.returncode, 0, result.stdout)
-        self.assertIn("Tests due in Execution (2, fixed or design): AUTH-1, AUTH-2N.", result.stdout)
+        self.assertIn("Tests due in Execution (2, fixed or design): TRAD_IN_REQ_1, TRAD_OUT_TO_IN_REQ_1.", result.stdout)
 
     def test_a_test_due_in_execution_still_needs_a_test_method(self):
         self.replace("docs/discovery/requirements.md", "| `test_quantity` | Fixed |", "| | Fixed |")
-        self.write("tests/test_boundary.py", 'req("AUTH-1")\nreq("PERF-1")\n')
-        self.assertProblem("AUTH-2N: no test method.")
+        self.write("tests/test_boundary.py", 'req("TRAD_OUT_TO_IN_REQ_1")\nreq("TRAD_IN_REQ_3")\n')
+        self.assertProblem("TRAD_IN_REQ_1: no test method.")
 
     def test_a_tag_for_an_unknown_requirement_fails(self):
-        self.write("tests/test_boundary.py", TESTS + 'req("AUTH-7")\n')
-        self.assertProblem("Unknown requirement AUTH-7, tagged in: tests/test_boundary.py.")
+        self.write("tests/test_boundary.py", TESTS + 'req("TRAD_IN_REQ_7")\n')
+        self.assertProblem("Unknown requirement TRAD_IN_REQ_7, tagged in: tests/test_boundary.py.")
 
     # 4. Numbers for non-functional requirements.
     def test_a_measure_with_no_baseline_or_target_fails(self):
         self.replace("docs/discovery/requirements.md", "| p95 latency | 40 ms |", "| p95 latency | TBD |")
-        self.assertProblem("PERF-1: a measure, but no baseline or target.")
+        self.assertProblem("TRAD_IN_REQ_3: a measure, but no baseline or target.")
 
     # 5. The decision log.
     def test_an_undecided_entry_fails(self):
@@ -188,12 +196,107 @@ class HandoffTest(unittest.TestCase):
     def test_a_decision_log_from_the_config(self):
         (self.project / "docs/discovery/keep-or-fix.md").unlink()
         self.write("docs/discovery/assumptions.md", DECISIONS.replace("Keep or fix", "Assumptions"))
+        self.replace(REQUIREMENTS_FILE, "keep-or-fix.md#KF-1", "assumptions.md#KF-1")
         self.write(".claude/slice-migration.json", json.dumps({"handoff": {"decisions": ["docs/discovery/assumptions.md"]}}))
         self.assertEqual(self.run_handoff().returncode, 0)
 
     def test_no_decision_log_fails(self):
         (self.project / "docs/discovery/keep-or-fix.md").unlink()
         self.assertProblem("No decision log")
+
+    # IDs and links.
+    def test_a_state_name_of_several_words_uses_hyphens(self):
+        for rel in (USERS_FILE, REQUIREMENTS_FILE):
+            path = self.project / rel
+            path.write_text(path.read_text().replace("TRAD_IN", "TRAD_READY-TO-SHIP").replace("_TO_IN", "_TO_READY-TO-SHIP"))
+        self.write("tests/test_boundary.py", TESTS.replace("TRAD_IN", "TRAD_READY-TO-SHIP").replace("_TO_IN", "_TO_READY-TO-SHIP"))
+        result = self.run_handoff()
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_indexes_are_allowed_on_every_kind_of_id(self):
+        def indexed(text):
+            text = text.replace("TRAD_IN_TO_OUT", "@1").replace("TRAD_OUT_TO_IN", "@2")
+            text = text.replace("TRAD_IN", "TRAD_IN_1").replace("TRAD_OUT", "TRAD_OUT_2")
+            return text.replace("@1", "TRAD_IN_1_TO_OUT_2_3").replace("@2", "TRAD_OUT_2_TO_IN_1")
+
+        self.write(USERS_FILE, indexed(USERS))
+        self.write(REQUIREMENTS_FILE, indexed(REQUIREMENTS))
+        self.write("tests/test_boundary.py", indexed(TESTS))
+        result = self.run_handoff()
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_an_old_style_requirement_id_fails(self):
+        self.replace(REQUIREMENTS_FILE, 'id="TRAD_OUT_TO_IN_REQ_1"></a>TRAD_OUT_TO_IN_REQ_1', 'id="AUTH-1"></a>AUTH-1')
+        self.assertProblem("AUTH-1: not a valid requirement ID.")
+
+    def test_a_badly_formed_state_id_fails(self):
+        self.replace(USERS_FILE, "</a>TRAD_OUT |", "</a>TRAD_LOGGED_OUT |")
+        self.assertProblem("TRAD_LOGGED_OUT: not a valid state ID.")
+
+    def test_a_reserved_word_cannot_be_a_state_name(self):
+        self.replace(USERS_FILE, "</a>TRAD_OUT |", "</a>TRAD_TO |")
+        self.assertProblem("TRAD_TO: not a valid state ID.")
+
+    def test_a_user_id_of_the_wrong_length_fails(self):
+        self.replace(USERS_FILE, "</a>TRAD |", "</a>TRADERS |")
+        self.assertProblem("TRADERS: not a valid user ID.")
+
+    def test_a_definition_with_no_anchor_fails(self):
+        self.replace(USERS_FILE, '<a id="TRAD_OUT"></a>TRAD_OUT |', "TRAD_OUT |")
+        self.assertProblem("TRAD_OUT: no anchor for links to reach it.")
+
+    def test_a_duplicate_id_fails(self):
+        self.replace(REQUIREMENTS_FILE, '<a id="TRAD_IN_REQ_2"></a>TRAD_IN_REQ_2', '<a id="TRAD_IN_REQ_1"></a>TRAD_IN_REQ_1')
+        self.assertProblem("TRAD_IN_REQ_1: used as an ID 2 times.")
+
+    def test_a_state_must_link_back_to_its_user(self):
+        self.replace(USERS_FILE, "| Logged out | [TRAD](#TRAD) |", "| Logged out | TRAD |")
+        self.assertProblem("TRAD_OUT: needs one link back to its user, and has 0.")
+
+    def test_a_transition_must_link_back_to_both_states(self):
+        self.replace(USERS_FILE, "| Log in | [TRAD_OUT](#TRAD_OUT) | [TRAD_IN](#TRAD_IN) |", "| Log in | [TRAD_OUT](#TRAD_OUT) | TRAD_IN |")
+        self.assertProblem("TRAD_OUT_TO_IN: needs one link back to the state it enters, and has 0.")
+
+    def test_a_transition_linking_to_the_wrong_state_fails(self):
+        self.replace(USERS_FILE, "| Log in | [TRAD_OUT](#TRAD_OUT) | [TRAD_IN](#TRAD_IN) |", "| Log in | [TRAD_IN](#TRAD_IN) | [TRAD_OUT](#TRAD_OUT) |")
+        result = self.run_handoff()
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertIn("TRAD_OUT_TO_IN: links back to TRAD_IN as the state it leaves", result.stdout)
+        self.assertIn("TRAD_OUT_TO_IN: links back to TRAD_OUT as the state it enters", result.stdout)
+
+    def test_a_requirement_must_link_back(self):
+        self.replace(REQUIREMENTS_FILE, "| [TRAD_OUT_TO_IN](users-states-journeys.md#TRAD_OUT_TO_IN) |", "| TRAD_OUT_TO_IN |")
+        self.assertProblem("TRAD_OUT_TO_IN_REQ_1: needs one link back to its state or transition, and has 0.")
+
+    def test_a_requirement_linking_to_the_wrong_parent_fails(self):
+        self.replace(REQUIREMENTS_FILE, "| [TRAD_OUT_TO_IN](users-states-journeys.md#TRAD_OUT_TO_IN) |", "| [TRAD_IN](users-states-journeys.md#TRAD_IN) |")
+        self.assertProblem("TRAD_OUT_TO_IN_REQ_1: links back to TRAD_IN, but its ID says TRAD_OUT_TO_IN.")
+
+    def test_a_requirement_with_no_such_parent_fails(self):
+        self.replace(REQUIREMENTS_FILE, '<a id="TRAD_IN_REQ_2"></a>TRAD_IN_REQ_2 | [TRAD_IN](users-states-journeys.md#TRAD_IN)', '<a id="TRAD_GONE_REQ_2"></a>TRAD_GONE_REQ_2 | [TRAD_GONE](users-states-journeys.md#TRAD_GONE)')
+        result = self.run_handoff()
+        self.assertIn("TRAD_GONE_REQ_2: TRAD_GONE isn't in the states or transitions tables.", result.stdout)
+        self.assertIn("the link to users-states-journeys.md#TRAD_GONE goes nowhere.", result.stdout)
+
+    def test_a_non_functional_requirement_needs_a_state_or_transition(self):
+        self.replace(REQUIREMENTS_FILE, "| ID | State or transition | Requirement | Measure |", "| ID | Parent | Requirement | Measure |")
+        self.assertProblem("a requirements table has no state or transition column.")
+
+    def test_a_dropped_requirement_links_back_too(self):
+        self.replace(REQUIREMENTS_FILE, "| [TRAD_IN](users-states-journeys.md#TRAD_IN) | Admin can", "| TRAD_IN | Admin can")
+        self.assertProblem("TRAD_IN_REQ_4: needs one link back to its state or transition, and has 0.")
+
+    def test_a_dangling_link_fails(self):
+        self.replace(REQUIREMENTS_FILE, "[KF-1](keep-or-fix.md#KF-1)", "[KF-1](keep-or-fix.md#KF-2), KF-1")
+        self.assertProblem("the link to keep-or-fix.md#KF-2 goes nowhere.")
+
+    def test_a_link_shown_as_code_is_not_checked(self):
+        self.replace(REQUIREMENTS_FILE, "# Requirements\n", "# Requirements\n\nFor example `[X](#Y)`.\n\n```\n[X](#Y)\n```\n")
+        self.assertEqual(self.run_handoff().returncode, 0)
+
+    def test_no_transitions_fails(self):
+        self.write(USERS_FILE, USERS.split("| ID | Transition |")[0] + USERS[USERS.index("| Journey |"):])
+        self.assertProblem("no transitions.")
 
     # 6. Sign-off.
     def test_no_sign_off_fails(self):

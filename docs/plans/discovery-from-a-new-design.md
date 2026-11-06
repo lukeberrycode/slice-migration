@@ -1,6 +1,6 @@
 # Plan: Discovery from a new design
 
-**Status:** proposed, 6 November 2026. Not started. Before work starts, the estimate goes in `docs/timings.md`.
+**Status:** proposed, 6 November 2026. Not started.
 
 ## The task
 
@@ -111,7 +111,3 @@ The README's "Use" section describes both sources, and `method.md`'s Changes sec
 3. **How a confirmation is recorded.** Suggestion: a *Confirmed by* column in the requirements table (who, how and when, for example "Trader walkthrough, Sam, 12 Nov"), filled in only for design requirements. The other way is a separate `confirmations.md`, which suits long research notes but splits the evidence from the requirement.
 4. **The product for the worked run.** It needs to be small enough to finish in a session or two, real enough to have users and constraints worth discovering, and ideally something that will be built afterwards, so Planning and Execution can follow.
 5. **Whether contract tests can be written in Discovery.** The method puts all of a design's tests in Execution. A contract test for a service the product calls could be written and run in Discovery, against that service. Suggestion: allow it, as a test that counts if it's there, but don't require it.
-
-## Estimate
-
-To be made before work starts and recorded in `docs/timings.md`, per step: Luke's with and without AI, and Claude's per-step judgement.

@@ -36,7 +36,7 @@ Run `/slice-migration:handoff`. Planning starts from the Discovery handoff in th
    - the mechanism that avoids a big bang: strangler fig routing, feature flags, or both slices in parallel with outputs compared;
    - success criteria per slice: its boundary and contract tests, from Discovery and from Execution, passing against the new slice, plus agreed live measures;
    - rollback triggers and the procedure, to be rehearsed once before the first cut-over.
-9. **Vertical slices**, `docs/planning/slices.md`: slices that can be delivered and shown whole, in delivery order. Order by risk and dependency (Discovery's risk ranking). For each slice: its requirement IDs, copied from Discovery, and its elements in dependency order. Mark the requirements whose tests are due in Execution (the handoff check lists them): each element's due tests are written before the element. Every requirement must be in exactly one slice; list any that aren't.
+9. **Vertical slices**, `docs/planning/slices.md`: slices that can be delivered and shown whole, in delivery order. Order by risk and dependency (Discovery's risk ranking). For each slice: its requirement IDs, copied from Discovery and each linked to its row there, and its elements in dependency order. Mark the requirements whose tests are due in Execution (the handoff check lists them): each element's due tests are written before the element. Every requirement must be in exactly one slice; list any that aren't.
 10. **Stop at the plan gate.** Run `/slice-migration:gate-review planning` first, as at the stack gate. The person approves the slices, their order and the cut-over plan. Execution can't start until they do.
 
 ## Measure the time

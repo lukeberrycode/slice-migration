@@ -9,7 +9,7 @@ Each slice can be delivered, shown and cut over whole. They're in delivery order
 
 ### 1. <Slice>
 
-**Requirements:** <IDs, copied from `docs/discovery/requirements.md`>
+**Requirements:** <IDs, copied from `docs/discovery/requirements.md`, each linked to its row there>
 
 **Elements, in dependency order:**
 
